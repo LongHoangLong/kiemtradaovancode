@@ -2,17 +2,21 @@
 "use client";
 
 import { useLanguage } from "@/contexts/language-context";
-import { AnalysisResult } from "@/types/plagiarism";
+import { AnalysisResult, DetailedComparisonInfo } from "@/types/plagiarism";
 import { Button } from "./ui/button";
 import { ArrowLeft, File, AlertTriangle, Target } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { SimilarityMatrix } from "./similarity-matrix";
 import { DetailedList } from "./plagiarism-report";
+import { DetailedComparison } from "./detailed-comparison";
 
 interface AnalysisReportProps {
     result: AnalysisResult;
     onReset: () => void;
+    detailedViewInfo: DetailedComparisonInfo | null;
+    onShowDetail: (info: DetailedComparisonInfo) => void;
+    onBackToReport: () => void;
 }
 
 const StatCard = ({ icon, title, value, color }: { icon: React.ReactNode, title: string, value: number, color?: string }) => (
@@ -29,15 +33,30 @@ const StatCard = ({ icon, title, value, color }: { icon: React.ReactNode, title:
     </Card>
 );
 
-export function AnalysisReport({ result, onReset }: AnalysisReportProps) {
+export function AnalysisReport({ result, onReset, detailedViewInfo, onShowDetail, onBackToReport }: AnalysisReportProps) {
     const { t } = useLanguage();
+
+    if (detailedViewInfo) {
+        return <DetailedComparison info={detailedViewInfo} onBack={onBackToReport} />;
+    }
+
+    const handleMatrixClick = (fileAIndex: number, fileBIndex: number) => {
+        const fileA = result.matrix.fileNames[fileAIndex];
+        const fileB = result.matrix.fileNames[fileBIndex];
+        const comparison = result.detailedList.find(
+            (item) => (item.fileA === fileA && item.fileB === fileB) || (item.fileA === fileB && item.fileB === fileA)
+        );
+        if (comparison) {
+            onShowDetail(comparison);
+        }
+    }
 
     return (
         <div className="w-full flex flex-col gap-6">
             <div>
                 <Button variant="ghost" onClick={onReset} className="mb-4">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    {t.back}
+                    {t.startNewAnalysis}
                 </Button>
                 <h2 className="text-3xl font-bold tracking-tight">{result.fileName}</h2>
                 <p className="text-muted-foreground text-sm">{new Date().toLocaleString()}</p>
@@ -55,10 +74,10 @@ export function AnalysisReport({ result, onReset }: AnalysisReportProps) {
                     <TabsTrigger value="list">{t.detailedList}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="matrix" className="mt-4">
-                    <SimilarityMatrix matrix={result.matrix} />
+                    <SimilarityMatrix matrix={result.matrix} onCellClick={handleMatrixClick} />
                 </TabsContent>
                 <TabsContent value="list" className="mt-4">
-                    <DetailedList results={result.detailedList} />
+                    <DetailedList results={result.detailedList} onShowDetail={onShowDetail} />
                 </TabsContent>
             </Tabs>
         </div>

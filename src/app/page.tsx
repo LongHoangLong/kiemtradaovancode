@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import JSZip from "jszip";
-import DiffMatchPatch, { DIFF_EQUAL } from "diff-match-patch";
+import DiffMatchPatch, { DIFF_EQUAL, diff_match_patch } from "diff-match-patch";
 import { Header } from "@/components/layout/header";
 import { AssignmentUpload } from "@/components/assignment-upload";
 import { AnalysisReport } from "@/components/analysis-report";
@@ -12,14 +12,19 @@ import { Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { AnalysisResult } from "@/types/plagiarism";
+import { AnalysisResult, PlagiarismResult, DetailedComparisonInfo } from "@/types/plagiarism";
 
 const cleanCode = (code: string): string => {
   return code
-    .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "")
+    .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "") // remove comments
+    .replace(/#.*$/gm, "") // remove python comments
     .replace(/\s+/g, " ")
     .trim();
 };
+
+const tokenize = (code: string): string[] => {
+    return cleanCode(code).split(/\s+/).filter(Boolean);
+}
 
 export default function Home() {
   const { t } = useLanguage();
@@ -29,11 +34,13 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [detailedViewInfo, setDetailedViewInfo] = useState<DetailedComparisonInfo | null>(null);
 
   const handleFileChange = (selectedFile: File | null) => {
     setFile(selectedFile);
     setAnalysisComplete(false);
     setAnalysisResult(null);
+    setDetailedViewInfo(null);
     setProgress(0);
   };
 
@@ -41,13 +48,23 @@ export default function Home() {
     setFile(null);
     setAnalysisComplete(false);
     setAnalysisResult(null);
+    setDetailedViewInfo(null);
     setProgress(0);
+  };
+
+  const handleShowDetail = (info: DetailedComparisonInfo) => {
+    setDetailedViewInfo(info);
+  };
+  
+  const handleBackToReport = () => {
+    setDetailedViewInfo(null);
   };
 
   const handleAnalysis = async () => {
     if (!file) return;
     setIsAnalyzing(true);
     setAnalysisComplete(false);
+    setDetailedViewInfo(null);
     setProgress(0);
 
     try {
@@ -71,7 +88,7 @@ export default function Home() {
         return;
       }
 
-      const comparisons: { fileA: string; fileB: string; similarity: number; codeA: string; codeB: string }[] = [];
+      const comparisons: PlagiarismResult[] = [];
       const dmp = new DiffMatchPatch();
       const totalComparisons = (files.length * (files.length - 1)) / 2;
       let comparisonsDone = 0;
@@ -83,35 +100,48 @@ export default function Home() {
           const fileA = files[i];
           const fileB = files[j];
           
-          const cleanA = cleanCode(fileA.content);
-          const cleanB = cleanCode(fileB.content);
+          const tokensA = tokenize(fileA.content);
+          const tokensB = tokenize(fileB.content);
 
-          const diffs = dmp.diff_main(cleanA, cleanB);
+          const diffs = dmp.diff_main(tokensA.join(' '), tokensB.join(' '));
           dmp.diff_cleanupSemantic(diffs);
           
           let commonLength = 0;
+          const commonSnippets: { content: string; tokens: number }[] = [];
+          
           for (const [op, text] of diffs) {
             if (op === DIFF_EQUAL) {
-              commonLength += text.length;
+              const snippetTokens = text.trim().split(/\s+/).filter(Boolean);
+              if(snippetTokens.length > 0) {
+                commonLength += text.length;
+                commonSnippets.push({
+                    content: text.trim(),
+                    tokens: snippetTokens.length
+                })
+              }
             }
           }
           
-          const totalLength = cleanA.length + cleanB.length;
+          const totalLength = tokensA.join(' ').length + tokensB.join(' ').length;
           const similarity = totalLength > 0 ? (2 * commonLength / totalLength) * 100 : 100;
           
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
 
-
-          if (similarity > 10) {
-            comparisons.push({
-              fileA: fileA.name,
-              fileB: fileB.name,
-              similarity: similarity,
-              codeA: fileA.content,
-              codeB: fileB.content,
-            });
-          }
+          comparisons.push({
+            id: `${i}-${j}`,
+            fileA: fileA.name,
+            fileB: fileB.name,
+            similarity: similarity,
+            codeA: fileA.content,
+            codeB: fileB.content,
+            details: {
+                commonStrings: commonSnippets.length,
+                tokensA: tokensA.length,
+                tokensB: tokensB.length,
+                similarSnippets: commonSnippets.sort((a,b) => b.tokens - a.tokens),
+            }
+          });
           
           comparisonsDone++;
           setProgress(Math.round((comparisonsDone / totalComparisons) * 100));
@@ -148,28 +178,9 @@ export default function Home() {
     }
   };
 
-  return (
-    <div className="flex flex-col min-h-screen bg-muted/40">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {!analysisComplete && (
-            <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
-                <div className="flex flex-col gap-2">
-                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
-                    {t.appName}
-                    </h2>
-                    <p className="text-lg text-muted-foreground">{t.tagline}</p>
-                </div>
-                <AssignmentUpload
-                    onFileChange={handleFileChange}
-                    onAnalyze={handleAnalysis}
-                    isAnalyzing={isAnalyzing}
-                    fileName={file?.name}
-                />
-            </div>
-        )}
-
-        {isAnalyzing && (
+  const currentView = () => {
+    if(isAnalyzing) {
+        return (
             <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
                 <Card className="w-full max-w-md shadow-md">
                     <CardContent className="p-6 flex flex-col items-center gap-4">
@@ -182,11 +193,44 @@ export default function Home() {
                     </CardContent>
                 </Card>
             </div>
-        )}
+        );
+    }
+    
+    if (analysisComplete && analysisResult) {
+      return (
+        <AnalysisReport 
+            result={analysisResult} 
+            onReset={handleReset} 
+            detailedViewInfo={detailedViewInfo}
+            onShowDetail={handleShowDetail}
+            onBackToReport={handleBackToReport}
+        />
+      );
+    }
 
-        {analysisComplete && analysisResult && (
-          <AnalysisReport result={analysisResult} onReset={handleReset} />
-        )}
+    return (
+        <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
+            <div className="flex flex-col gap-2">
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
+                {t.appName}
+                </h2>
+                <p className="text-lg text-muted-foreground">{t.tagline}</p>
+            </div>
+            <AssignmentUpload
+                onFileChange={handleFileChange}
+                onAnalyze={handleAnalysis}
+                isAnalyzing={isAnalyzing}
+                fileName={file?.name}
+            />
+        </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-muted/40">
+      <Header />
+      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {currentView()}
       </main>
       <footer className="py-4 px-6 md:px-8">
         <div className="container mx-auto text-center text-sm text-muted-foreground">

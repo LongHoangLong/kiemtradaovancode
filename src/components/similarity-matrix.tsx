@@ -5,17 +5,18 @@ import { useLanguage } from "@/contexts/language-context";
 import { SimilarityMatrix as SimilarityMatrixType } from "@/types/plagiarism";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 
 interface SimilarityMatrixProps {
   matrix: SimilarityMatrixType;
+  onCellClick: (fileAIndex: number, fileBIndex: number) => void;
 }
 
-export function SimilarityMatrix({ matrix }: SimilarityMatrixProps) {
+export function SimilarityMatrix({ matrix, onCellClick }: SimilarityMatrixProps) {
   const { t } = useLanguage();
   const { fileNames, similarityMatrix } = matrix;
 
   const getShortName = (name: string) => {
-    // Tries to extract a more readable name, e.g., "nguyen_van_a" from "submissions/nguyen_van_a.py"
     const parts = name.split('/').pop()?.split('.') ?? [];
     return parts.slice(0, -1).join('.') || name;
   };
@@ -58,9 +59,15 @@ export function SimilarityMatrix({ matrix }: SimilarityMatrixProps) {
                       {i === j ? (
                         <div className="bg-muted h-9 w-full rounded-md flex items-center justify-center">-</div>
                       ) : (
-                        <Badge className={`text-white text-xs font-semibold ${getBadgeColor(similarityMatrix[i][j])}`}>
-                            {similarityMatrix[i][j].toFixed(1)}%
-                        </Badge>
+                        <Button 
+                            variant="ghost" 
+                            className={`h-auto w-auto p-0 ${getBadgeColor(similarityMatrix[i][j])} text-white text-xs font-semibold`}
+                            onClick={() => onCellClick(i,j)}
+                        >
+                            <Badge className={`pointer-events-none ${getBadgeColor(similarityMatrix[i][j])}`}>
+                                {similarityMatrix[i][j].toFixed(1)}%
+                            </Badge>
+                        </Button>
                       )}
                     </td>
                   ))}
