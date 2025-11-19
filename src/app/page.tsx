@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import JSZip from "jszip";
-import DiffMatchPatch, { DIFF_EQUAL, DIFF_DELETE, DIFF_INSERT } from "diff-match-patch";
+import DiffMatchPatch from "diff-match-patch";
 import { Header } from "@/components/layout/header";
 import { AssignmentUpload } from "@/components/assignment-upload";
 import { AnalysisReport } from "@/components/analysis-report";
@@ -13,6 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AnalysisResult, PlagiarismResult, DetailedComparisonInfo } from "@/types/plagiarism";
+import { Button } from "@/components/ui/button";
 
 const cleanCode = (code: string): string => {
   return code
@@ -109,6 +110,7 @@ export default function Home() {
           const fileA = files[i];
           const fileB = files[j];
           
+          // Token-based similarity for accuracy
           const tokensA = tokenize(fileA.content);
           const tokensB = tokenize(fileB.content);
           
@@ -122,17 +124,14 @@ export default function Home() {
           }
           
           const totalTokens = tokensA.length + tokensB.length;
-          const similarity = totalTokens > 0 ? (2 * commonTokens / totalTokens) * 100 : 100;
+          const similarity = totalTokens > 0 ? (2 * commonTokens / totalTokens) * 100 : 0;
           
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
           
-          const diffsOriginal = dmp.diff_main(fileA.content, fileB.content);
-          dmp.diff_cleanupSemantic(diffsOriginal);
-
-          // Since the new algorithm doesn't produce common snippets in the same way, we can simplify this.
-          // We can't reliably show common snippets when order is ignored.
-          const commonSnippets: { content: string; tokens: number }[] = [];
+          // Diff-based comparison for highlighting
+          const diffs = dmp.diff_main(fileA.content, fileB.content);
+          dmp.diff_cleanupSemantic(diffs);
           
           comparisons.push({
             id: `${i}-${j}`,
@@ -142,11 +141,11 @@ export default function Home() {
             codeA: fileA.content,
             codeB: fileB.content,
             details: {
-                commonStrings: 0, // This metric is less relevant now
+                commonStrings: 0,
                 tokensA: tokensA.length,
                 tokensB: tokensB.length,
-                similarSnippets: commonSnippets,
-                diffs: diffsOriginal,
+                similarSnippets: [],
+                diffs: diffs,
             }
           });
           
