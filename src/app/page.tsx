@@ -19,12 +19,14 @@ const cleanCode = (code: string): string => {
   return code
     .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "") // remove comments
     .replace(/#.*$/gm, "") // remove python comments
-    .replace(/\s+/g, " ")
+    .replace(/^\s*[\r\n]/gm, "") // remove empty lines
     .trim();
 };
 
 const tokenize = (code: string): string[] => {
-    return cleanCode(code).split(/\s+/).filter(Boolean);
+    // This regex splits the code by spaces, newlines, and also separates out common programming symbols.
+    const tokens = code.split(/([,;(){}[\]=+\-*/&|!<>%^~?.:\s])/g);
+    return tokens.map(t => t.trim()).filter(t => t.length > 0);
 }
 
 // Function to create a frequency map of tokens
@@ -110,9 +112,12 @@ export default function Home() {
           const fileA = files[i];
           const fileB = files[j];
           
+          const cleanedCodeA = cleanCode(fileA.content);
+          const cleanedCodeB = cleanCode(fileB.content);
+          
           // Token-based similarity for accuracy
-          const tokensA = tokenize(fileA.content);
-          const tokensB = tokenize(fileB.content);
+          const tokensA = tokenize(cleanedCodeA);
+          const tokensB = tokenize(cleanedCodeB);
           
           const mapA = createTokenMap(tokensA);
           const mapB = createTokenMap(tokensB);
@@ -129,7 +134,7 @@ export default function Home() {
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
           
-          // Diff-based comparison for highlighting
+          // Diff-based comparison for highlighting (using original content for better readability)
           const diffs = dmp.diff_main(fileA.content, fileB.content);
           dmp.diff_cleanupSemantic(diffs);
           
@@ -141,7 +146,7 @@ export default function Home() {
             codeA: fileA.content,
             codeB: fileB.content,
             details: {
-                commonStrings: 0,
+                commonStrings: 0, // This can be deprecated or recalculated if needed
                 tokensA: tokensA.length,
                 tokensB: tokensB.length,
                 similarSnippets: [],
