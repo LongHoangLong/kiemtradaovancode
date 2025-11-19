@@ -25,11 +25,7 @@ const InfoCard = ({ title, value }: { title: string, value: string | number }) =
 
 export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
     const { t } = useLanguage();
-    const dmp = new DiffMatchPatch();
-    const diffs = dmp.diff_main(info.codeA, info.codeB);
-    dmp.diff_cleanupSemantic(diffs);
-
-
+    
     const getShortName = (name: string) => {
         const parts = name.split('/').pop()?.split('.') ?? [];
         return parts.slice(0, -1).join('.') || name;
@@ -80,47 +76,15 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                     <CardTitle>{t.fullSourceCode}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 className="font-semibold mb-2">{getShortName(info.fileA)}</h3>
-                            <div className="text-sm bg-muted/50 rounded-md overflow-x-auto font-code h-full border">
-                                <table className="w-full">
-                                    <tbody>
-                                        {dmp.diff_main(info.codeA, info.codeB).filter(d => d[0] !== 1).map(([op, text], i) => {
-                                            let lineNum = 1;
-                                            return text.split('\n').map((line, lineIndex) => (
-                                                <tr key={`${i}-${lineIndex}`} style={{backgroundColor: op === 0 ? 'rgba(252, 219, 3, 0.2)' : 'transparent'}}>
-                                                    <td className="px-2 text-right text-muted-foreground select-none w-10">{lineNum++}</td>
-                                                    <td className="whitespace-pre-wrap break-words pr-4 pl-2">{line}</td>
-                                                </tr>
-                                            ));
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold mb-2">{getShortName(info.fileB)}</h3>
-                             <div className="text-sm bg-muted/50 rounded-md overflow-x-auto font-code h-full border">
-                                <table className="w-full">
-                                    <tbody>
-                                        {dmp.diff_main(info.codeA, info.codeB).filter(d => d[0] !== -1).map(([op, text], i) => {
-                                            let lineNum = 1;
-                                            return text.split('\n').map((line, lineIndex) => (
-                                                <tr key={`${i}-${lineIndex}`} style={{backgroundColor: op === 0 ? 'rgba(252, 219, 3, 0.2)' : 'transparent'}}>
-                                                    <td className="px-2 text-right text-muted-foreground select-none w-10">{lineNum++}</td>
-                                                    <td className="whitespace-pre-wrap break-words pr-4 pl-2">{line}</td>
-                                                </tr>
-                                            ));
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <CodeHighlighter
+                        diffs={info.details.diffs}
+                        originalA={info.codeA}
+                        originalB={info.codeB}
+                        fileA={info.fileA}
+                        fileB={info.fileB}
+                    />
                 </CardContent>
             </Card>
         </div>
     );
 }
-
