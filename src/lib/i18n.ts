@@ -1,3 +1,4 @@
+
 export const translations = {
   en: {
     appName: "Code Plagiarism Check",
@@ -36,12 +37,12 @@ export const translations = {
     detailedInfo: "Detailed Information",
     similarToken: "Similar Tokens",
     commonString: "Common Strings",
-    tokensSV1: "Tokens SV1",
-    tokensSV2: "Tokens SV2",
+    tokensSV1: "Tokens File 1",
+    tokensSV2: "Tokens File 2",
     similarCode: "Similar Code Snippets",
     overallSimilarity: "Overall Similarity",
     noSimilarSnippets: "No similar snippets found.",
-    fullSourceCode: "Full Source Code",
+    fullSourceCode: "Source Code Comparison",
   },
   vi: {
     appName: "Kiểm tra đạo văn Code",
@@ -80,11 +81,11 @@ export const translations = {
     detailedInfo: "Thông Tin Chi Tiết",
     similarToken: "Token tương đồng",
     commonString: "Chuỗi chung",
-    tokensSV1: "Tokens SV1",
-    tokensSV2: "Tokens SV2",
+    tokensSV1: "Tokens Tệp 1",
+    tokensSV2: "Tokens Tệp 2",
     similarCode: "Đoạn Code Tương Tự",
     overallSimilarity: "Tương đồng",
     noSimilarSnippets: "Không tìm thấy đoạn mã tương tự.",
-    fullSourceCode: "Mã nguồn đầy đủ",
+    fullSourceCode: "So sánh mã nguồn",
   },
 };

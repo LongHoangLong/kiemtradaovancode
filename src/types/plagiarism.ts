@@ -1,18 +1,10 @@
 
 import type { diff_match_patch } from "diff-match-patch";
 
-export type SimilarSnippet = {
-    content: string;
-    tokens: number;
-};
-
 export type PlagiarismDetails = {
-    commonStrings: number;
     tokensA: number;
     tokensB: number;
-    similarSnippets: SimilarSnippet[];
     diffs: ReturnType<diff_match_patch['diff_main']>;
-    commonTokens: string[];
 }
 
 export type PlagiarismResult = {
@@ -22,6 +14,8 @@ export type PlagiarismResult = {
     similarity: number;
     codeA: string;
     codeB: string;
+    cleanedCodeA: string;
+    cleanedCodeB: string;
     details: PlagiarismDetails;
 };
 

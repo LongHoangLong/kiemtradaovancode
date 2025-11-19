@@ -64,7 +64,6 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <InfoCard title={t.similarToken} value={`${info.similarity.toFixed(1)}%`} />
-                    <InfoCard title={t.commonString} value={info.details.commonTokens.length} />
                     <InfoCard title={t.tokensSV1} value={info.details.tokensA} />
                     <InfoCard title={t.tokensSV2} value={info.details.tokensB} />
                 </CardContent>
@@ -77,11 +76,11 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                 <CardContent className="grid md:grid-cols-2 gap-6">
                     <div>
                         <h3 className="font-semibold mb-2">{getShortName(info.fileA)}</h3>
-                        <CodeHighlighter code={info.codeA} tokensToHighlight={info.details.commonTokens} />
+                        <CodeHighlighter diffs={info.details.diffs} type="A" />
                     </div>
                     <div>
                         <h3 className="font-semibold mb-2">{getShortName(info.fileB)}</h3>
-                        <CodeHighlighter code={info.codeB} tokensToHighlight={info.details.commonTokens} />
+                        <CodeHighlighter diffs={info.details.diffs} type="B" />
                     </div>
                 </CardContent>
             </Card>

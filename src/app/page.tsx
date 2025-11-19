@@ -117,7 +117,7 @@ export default function Home() {
           const cleanedCodeA = cleanCode(fileA.content);
           const cleanedCodeB = cleanCode(fileB.content);
           
-          // Token-based similarity for accuracy
+          // 1. Token-based similarity for accuracy
           const tokensA = tokenize(cleanedCodeA);
           const tokensB = tokenize(cleanedCodeB);
           
@@ -125,29 +125,24 @@ export default function Home() {
           const mapB = createTokenMap(tokensB);
 
           let intersectionSize = 0;
-
-          // Create a combined set of all unique tokens from both files
-          const allTokens = new Set([...tokensA, ...tokensB]);
-          const commonTokens = new Set<string>();
+          const allTokens = new Set([...mapA.keys(), ...mapB.keys()]);
 
           for (const token of allTokens) {
             const countA = mapA.get(token) || 0;
             const countB = mapB.get(token) || 0;
             if (countA > 0 && countB > 0) {
               intersectionSize += Math.min(countA, countB);
-              commonTokens.add(token);
             }
           }
           
           const totalTokens = tokensA.length + tokensB.length;
-          // Using Sørensen-Dice coefficient for similarity
           const similarity = totalTokens > 0 ? (2 * intersectionSize / totalTokens) * 100 : 0;
           
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
           
-          // Diff-based comparison for highlighting (using original content for better readability)
-          const diffs = dmp.diff_main(fileA.content, fileB.content);
+          // 2. Diff-based comparison for highlighting (using cleaned content for consistency)
+          const diffs = dmp.diff_main(cleanedCodeA, cleanedCodeB);
           dmp.diff_cleanupSemantic(diffs);
           
           comparisons.push({
@@ -155,15 +150,14 @@ export default function Home() {
             fileA: fileA.name,
             fileB: fileB.name,
             similarity: similarity,
-            codeA: fileA.content,
-            codeB: fileB.content,
+            codeA: fileA.content, // Keep original code for display
+            codeB: fileB.content, // Keep original code for display
+            cleanedCodeA: cleanedCodeA,
+            cleanedCodeB: cleanedCodeB,
             details: {
-                commonStrings: 0, 
                 tokensA: tokensA.length,
                 tokensB: tokensB.length,
-                similarSnippets: [],
-                diffs: diffs, // Keep for potential future use, but highlighting is now token-based
-                commonTokens: Array.from(commonTokens),
+                diffs: diffs,
             }
           });
           
