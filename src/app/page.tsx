@@ -26,6 +26,15 @@ const tokenize = (code: string): string[] => {
     return cleanCode(code).split(/\s+/).filter(Boolean);
 }
 
+// Function to create a frequency map of tokens
+const createTokenMap = (tokens: string[]): Map<string, number> => {
+  const map = new Map<string, number>();
+  for (const token of tokens) {
+    map.set(token, (map.get(token) || 0) + 1);
+  }
+  return map;
+};
+
 export default function Home() {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -102,30 +111,18 @@ export default function Home() {
           
           const tokensA = tokenize(fileA.content);
           const tokensB = tokenize(fileB.content);
-          const textA = tokensA.join(' ');
-          const textB = tokensB.join(' ');
+          
+          const mapA = createTokenMap(tokensA);
+          const mapB = createTokenMap(tokensB);
 
-          const diffs = dmp.diff_main(textA, textB);
-          dmp.diff_cleanupSemantic(diffs);
-          
-          let commonLength = 0;
-          const commonSnippets: { content: string; tokens: number }[] = [];
-          
-          for (const [op, text] of diffs) {
-            if (op === DIFF_EQUAL) {
-              const snippetTokens = text.trim().split(/\s+/).filter(Boolean);
-              if(snippetTokens.length > 0) {
-                commonLength += text.length;
-                commonSnippets.push({
-                    content: text.trim(),
-                    tokens: snippetTokens.length
-                })
-              }
-            }
+          let commonTokens = 0;
+          for (const [token, countA] of mapA.entries()) {
+            const countB = mapB.get(token) || 0;
+            commonTokens += Math.min(countA, countB);
           }
           
-          const totalLength = textA.length + textB.length;
-          const similarity = totalLength > 0 ? (2 * commonLength / totalLength) * 100 : 100;
+          const totalTokens = tokensA.length + tokensB.length;
+          const similarity = totalTokens > 0 ? (2 * commonTokens / totalTokens) * 100 : 100;
           
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
@@ -133,6 +130,10 @@ export default function Home() {
           const diffsOriginal = dmp.diff_main(fileA.content, fileB.content);
           dmp.diff_cleanupSemantic(diffsOriginal);
 
+          // Since the new algorithm doesn't produce common snippets in the same way, we can simplify this.
+          // We can't reliably show common snippets when order is ignored.
+          const commonSnippets: { content: string; tokens: number }[] = [];
+          
           comparisons.push({
             id: `${i}-${j}`,
             fileA: fileA.name,
@@ -141,10 +142,10 @@ export default function Home() {
             codeA: fileA.content,
             codeB: fileB.content,
             details: {
-                commonStrings: commonSnippets.length,
+                commonStrings: 0, // This metric is less relevant now
                 tokensA: tokensA.length,
                 tokensB: tokensB.length,
-                similarSnippets: commonSnippets.sort((a,b) => b.tokens - a.tokens),
+                similarSnippets: commonSnippets,
                 diffs: diffsOriginal,
             }
           });
