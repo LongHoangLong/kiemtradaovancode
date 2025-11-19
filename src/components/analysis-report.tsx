@@ -70,8 +70,8 @@ export function AnalysisReport({ result, onReset, detailedViewInfo, onShowDetail
 
             <Tabs defaultValue="list" className="w-full">
                 <TabsList>
-                    <TabsTrigger value="matrix">{t.similarityMatrix}</TabsTrigger>
                     <TabsTrigger value="list">{t.detailedList}</TabsTrigger>
+                    <TabsTrigger value="matrix">{t.similarityMatrix}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="matrix" className="mt-4">
                     <SimilarityMatrix matrix={result.matrix} onCellClick={handleMatrixClick} />
