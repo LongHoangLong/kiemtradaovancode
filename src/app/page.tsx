@@ -138,7 +138,7 @@ export default function Home() {
           similarityMatrix[j][i] = similarity;
           
           // 2. Diff for highlighting on original content
-          const diffs = dmp.diff_main(fileA.content, fileB.content);
+          const diffs = dmp.diff_main(cleanedCodeA, cleanedCodeB);
           dmp.diff_cleanupSemantic(diffs);
 
           comparisons.push({
