@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import JSZip from "jszip";
-import DiffMatchPatch from "diff-match-patch";
+import DiffMatchPatch, { DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from "diff-match-patch";
 import { Header } from "@/components/layout/header";
 import { AssignmentUpload } from "@/components/assignment-upload";
 import { PlagiarismReport } from "@/components/plagiarism-report";
@@ -84,10 +84,16 @@ export default function Home() {
           const diffs = dmp.diff_main(cleanA, cleanB);
           dmp.diff_cleanupSemantic(diffs);
           
-          const distance = dmp.diff_levenshtein(diffs);
-          const longerTextLength = Math.max(cleanA.length, cleanB.length);
-          const similarity = (1 - distance / longerTextLength) * 100;
+          let commonLength = 0;
+          for (const [op, text] of diffs) {
+            if (op === DIFF_EQUAL) {
+              commonLength += text.length;
+            }
+          }
           
+          const totalLength = cleanA.length + cleanB.length;
+          const similarity = totalLength > 0 ? (2 * commonLength / totalLength) * 100 : 100;
+
           if (similarity > 10) { // Only show significant similarities
             comparisons.push({
               id: `${i}-${j}`,
