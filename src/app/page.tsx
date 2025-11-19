@@ -125,11 +125,15 @@ export default function Home() {
           const mapB = createTokenMap(tokensB);
 
           let intersectionSize = 0;
+
+          // Create a combined set of all unique tokens from both files
+          const allTokens = new Set([...tokensA, ...tokensB]);
           const commonTokens = new Set<string>();
 
-          for (const [token, countA] of mapA.entries()) {
+          for (const token of allTokens) {
+            const countA = mapA.get(token) || 0;
             const countB = mapB.get(token) || 0;
-            if (countB > 0) {
+            if (countA > 0 && countB > 0) {
               intersectionSize += Math.min(countA, countB);
               commonTokens.add(token);
             }
