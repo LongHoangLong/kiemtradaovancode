@@ -104,6 +104,8 @@ export default function Home() {
       let comparisonsDone = 0;
       const fileNames = files.map(f => f.name);
       const similarityMatrix: number[][] = Array(files.length).fill(0).map(() => Array(files.length).fill(0));
+      
+      const dmp = new DiffMatchPatch();
 
       for (let i = 0; i < files.length; i++) {
         for (let j = i + 1; j < files.length; j++) {
@@ -124,10 +126,8 @@ export default function Home() {
           const allTokens = new Set([...mapA.keys(), ...mapB.keys()]);
 
           for (const token of allTokens) {
-            const countA = mapA.get(token) || 0;
-            const countB = mapB.get(token) || 0;
-            if (countA > 0 && countB > 0) {
-              intersectionSize += Math.min(countA, countB);
+            if (mapA.has(token) && mapB.has(token)) {
+              intersectionSize += Math.min(mapA.get(token)!, mapB.get(token)!);
             }
           }
           
@@ -137,32 +137,9 @@ export default function Home() {
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
           
-          // 2. Line-based comparison for highlighting
-          const linesA = fileA.content.split('\n');
-          const linesB = fileB.content.split('\n');
-          const linesASet = new Set(linesA.map(line => line.trim()).filter(line => line.length > 0));
-          const matchedLinesA: number[] = [];
-          const matchedLinesB: number[] = [];
-
-          linesA.forEach((line, index) => {
-            if (line.trim().length > 0 && linesASet.has(line.trim())) {
-                 const foundIndex = linesB.findIndex(lineB => lineB.trim() === line.trim());
-                 if (foundIndex !== -1) {
-                    matchedLinesA.push(index);
-                 }
-            }
-          });
-          
-          const linesBSet = new Set(linesB.map(line => line.trim()).filter(line => line.length > 0));
-          linesB.forEach((line, index) => {
-            if(line.trim().length > 0 && linesBSet.has(line.trim())){
-                const foundIndex = linesA.findIndex(lineA => lineA.trim() === line.trim());
-                if(foundIndex !== -1){
-                    matchedLinesB.push(index);
-                }
-            }
-          });
-
+          // 2. Diff for highlighting on original content
+          const diffs = dmp.diff_main(fileA.content, fileB.content);
+          dmp.diff_cleanupSemantic(diffs);
 
           comparisons.push({
             id: `${i}-${j}`,
@@ -174,8 +151,7 @@ export default function Home() {
             details: {
                 tokensA: tokensA.length,
                 tokensB: tokensB.length,
-                matchedLinesA: matchedLinesA,
-                matchedLinesB: matchedLinesB,
+                diffs: diffs,
             }
           });
           
