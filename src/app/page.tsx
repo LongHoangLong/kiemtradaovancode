@@ -39,7 +39,12 @@ export default function Home() {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = async () => {
-      const fileDataUri = reader.result as string;
+      let fileDataUri = reader.result as string;
+
+      // Normalize MIME type for zip files
+      if (file.type === 'application/x-zip-compressed' && fileDataUri.startsWith('data:application/x-zip-compressed')) {
+        fileDataUri = fileDataUri.replace('data:application/x-zip-compressed', 'data:application/zip');
+      }
       
       // Simulate progress for user feedback during analysis
       const progressInterval = setInterval(() => {
