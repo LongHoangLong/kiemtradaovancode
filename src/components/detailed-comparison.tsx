@@ -8,6 +8,8 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
+import { CodeHighlighter } from "./code-highlighter";
+import { DIFF_DELETE, DIFF_INSERT } from "diff-match-patch";
 
 interface DetailedComparisonProps {
     info: DetailedComparisonInfo;
@@ -28,6 +30,9 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
         const parts = name.split('/').pop()?.split('.') ?? [];
         return parts.slice(0, -1).join('.') || name;
     };
+
+    const codeA = info.details.diffs.filter(([op]) => op !== DIFF_INSERT).map(([, text]) => text).join('');
+    const codeB = info.details.diffs.filter(([op]) => op !== DIFF_DELETE).map(([, text]) => text).join('');
 
     return (
         <div className="w-full flex flex-col gap-6">
@@ -75,15 +80,33 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                     <CardTitle>{t.similarCode}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3">
-                    {info.details.similarSnippets.map((snippet, index) => (
+                    {info.details.similarSnippets.length > 0 ? info.details.similarSnippets.map((snippet, index) => (
                         <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                             <Badge variant="outline" className="mb-2 bg-white border-gray-300">{snippet.tokens} tokens</Badge>
                             <pre className="text-sm bg-transparent font-code overflow-x-auto"><code>{snippet.content}</code></pre>
                         </div>
-                    ))}
+                    )) : <p className="text-sm text-muted-foreground">{t.noSimilarSnippets}</p>}
                 </CardContent>
             </Card>
-
+            
+            <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{getShortName(info.fileA)}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <CodeHighlighter diffs={info.details.diffs} view="A" />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{getShortName(info.fileB)}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <CodeHighlighter diffs={info.details.diffs} view="B" />
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

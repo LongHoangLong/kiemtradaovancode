@@ -40,6 +40,8 @@ export const translations = {
     tokensSV2: "Tokens SV2",
     similarCode: "Similar Code Snippets",
     overallSimilarity: "Overall Similarity",
+    noSimilarSnippets: "No similar snippets found.",
+    fullSourceCode: "Full Source Code",
   },
   vi: {
     appName: "Kiểm tra đạo văn Code",
@@ -82,5 +84,7 @@ export const translations = {
     tokensSV2: "Tokens SV2",
     similarCode: "Đoạn Code Tương Tự",
     overallSimilarity: "Tương đồng",
+    noSimilarSnippets: "Không tìm thấy đoạn mã tương tự.",
+    fullSourceCode: "Mã nguồn đầy đủ",
   },
 };

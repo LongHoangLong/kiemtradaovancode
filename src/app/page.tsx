@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import JSZip from "jszip";
-import DiffMatchPatch, { DIFF_EQUAL, diff_match_patch } from "diff-match-patch";
+import DiffMatchPatch, { DIFF_EQUAL, DIFF_DELETE, DIFF_INSERT } from "diff-match-patch";
 import { Header } from "@/components/layout/header";
 import { AssignmentUpload } from "@/components/assignment-upload";
 import { AnalysisReport } from "@/components/analysis-report";
@@ -102,8 +102,10 @@ export default function Home() {
           
           const tokensA = tokenize(fileA.content);
           const tokensB = tokenize(fileB.content);
+          const textA = tokensA.join(' ');
+          const textB = tokensB.join(' ');
 
-          const diffs = dmp.diff_main(tokensA.join(' '), tokensB.join(' '));
+          const diffs = dmp.diff_main(textA, textB);
           dmp.diff_cleanupSemantic(diffs);
           
           let commonLength = 0;
@@ -122,11 +124,14 @@ export default function Home() {
             }
           }
           
-          const totalLength = tokensA.join(' ').length + tokensB.join(' ').length;
+          const totalLength = textA.length + textB.length;
           const similarity = totalLength > 0 ? (2 * commonLength / totalLength) * 100 : 100;
           
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
+          
+          const diffsOriginal = dmp.diff_main(fileA.content, fileB.content);
+          dmp.diff_cleanupSemantic(diffsOriginal);
 
           comparisons.push({
             id: `${i}-${j}`,
@@ -140,6 +145,7 @@ export default function Home() {
                 tokensA: tokensA.length,
                 tokensB: tokensB.length,
                 similarSnippets: commonSnippets.sort((a,b) => b.tokens - a.tokens),
+                diffs: diffsOriginal,
             }
           });
           
