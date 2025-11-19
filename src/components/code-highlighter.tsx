@@ -18,36 +18,40 @@ const getShortName = (name: string) => {
 };
 
 
-export function CodeHighlighter({ diffs, originalA, originalB, fileA, fileB }: CodeHighlighterProps) {
+export function CodeHighlighter({ diffs, fileA, fileB }: CodeHighlighterProps) {
 
   const renderSide = (type: 'A' | 'B') => {
-    const relevantDiffs = type === 'A'
-      ? diffs.filter(d => d[0] !== DiffMatchPatch.DIFF_INSERT)
-      : diffs.filter(d => d[0] !== DiffMatchPatch.DIFF_DELETE);
-
-    const lines: React.ReactNode[][] = [[]];
+    const filterOp = type === 'A' ? DiffMatchPatch.DIFF_INSERT : DiffMatchPatch.DIFF_DELETE;
     
-    relevantDiffs.forEach(([op, text]) => {
+    let lineNum = 1;
+    const lines: { number: number; content: React.ReactNode[] }[] = [{ number: lineNum, content: [] }];
+
+    for (const [op, text] of diffs) {
+      if (op === filterOp) continue;
+
       const textLines = text.split('\n');
-      textLines.forEach((line, index) => {
-        if (line) {
-          lines[lines.length - 1].push(
-            <span key={`${index}-${Math.random()}`} style={{ backgroundColor: op === DiffMatchPatch.DIFF_EQUAL ? 'rgba(252, 219, 3, 0.3)' : 'transparent' }}>
-              {line}
+      textLines.forEach((lineText, i) => {
+        if (lineText) {
+          const highlight = op === DiffMatchPatch.DIFF_EQUAL;
+          lines[lines.length - 1].content.push(
+            <span key={`${i}-${Math.random()}`} className={highlight ? 'bg-yellow-200' : ''}>
+              {lineText}
             </span>
           );
         }
-        if (index < textLines.length - 1) {
-          lines.push([]);
+
+        if (i < textLines.length - 1) {
+          lineNum++;
+          lines.push({ number: lineNum, content: [] });
         }
       });
-    });
+    }
 
-    return lines.map((lineContent, i) => (
+    return lines.map(({ number, content }, i) => (
       <tr key={i}>
-        <td className="px-2 text-right text-muted-foreground select-none w-10 sticky top-0 bg-muted/50">{i + 1}</td>
+        <td className="px-2 text-right text-muted-foreground select-none w-10 sticky top-0 bg-muted/50">{number}</td>
         <td className="whitespace-pre-wrap break-words pr-4 pl-2">
-            {lineContent.length > 0 ? lineContent : <span>&nbsp;</span>}
+          {content.length > 0 ? content : <span>&nbsp;</span>}
         </td>
       </tr>
     ));
