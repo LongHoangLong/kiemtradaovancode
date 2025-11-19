@@ -11,6 +11,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const { t } = useLanguage();
