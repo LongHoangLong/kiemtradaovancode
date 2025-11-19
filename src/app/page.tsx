@@ -3,18 +3,20 @@
 import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { AssignmentUpload } from "@/components/assignment-upload";
-import {
-  PlagiarismReport,
-  type PlagiarismResult,
-} from "@/components/plagiarism-report";
+import { PlagiarismReport } from "@/components/plagiarism-report";
 import { useLanguage } from "@/contexts/language-context";
 import { Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { analyzePlagiarism } from "@/ai/flows/plagiarism-flow";
+import { useToast } from "@/hooks/use-toast";
+import { PlagiarismResult } from "@/ai/schema/plagiarism";
+
 
 export default function Home() {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -28,59 +30,57 @@ export default function Home() {
     setProgress(0);
   };
 
-  const handleAnalysis = () => {
+  const handleAnalysis = async () => {
     if (!file) return;
     setIsAnalyzing(true);
     setAnalysisComplete(false);
     setProgress(0);
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 95) {
-          return prev;
-        }
-        return prev + 5;
-      });
-    }, 200);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const fileDataUri = reader.result as string;
+      
+      // Simulate progress for user feedback during analysis
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => (prev < 90 ? prev + 5 : 90));
+      }, 500);
 
-    setTimeout(() => {
-      clearInterval(interval);
-      setProgress(100);
-      setResults([
-        {
-          id: "1",
-          fileA: "student1_submission.py",
-          fileB: "student12_submission.py",
-          similarity: 92.5,
-        },
-        {
-          id: "2",
-          fileA: "student3_submission.cs",
-          fileB: "student8_submission.cs",
-          similarity: 78.2,
-        },
-        {
-          id: "3",
-          fileA: "student5_submission.py",
-          fileB: "student6_submission.py",
-          similarity: 65.0,
-        },
-        {
-          id: "4",
-          fileA: "student2_submission.py",
-          fileB: "student9_submission.py",
-          similarity: 45.7,
-        },
-        {
-          id: "5",
-          fileA: "student4_submission.cs",
-          fileB: "student11_submission.cs",
-          similarity: 12.3,
-        },
-      ]);
+      try {
+        const plagiarismResults = await analyzePlagiarism({
+          zipFileDataUri: fileDataUri,
+        });
+
+        clearInterval(progressInterval);
+        setProgress(100);
+        
+        // Sort results by similarity descending
+        const sortedResults = plagiarismResults.sort((a, b) => b.similarity - a.similarity);
+        
+        setResults(sortedResults.map((r, i) => ({...r, id: (i+1).toString()})));
+
+      } catch (error) {
+        console.error("Analysis failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Analysis Failed",
+          description: "An unexpected error occurred during the analysis.",
+        });
+        clearInterval(progressInterval);
+      } finally {
+        setIsAnalyzing(false);
+        setAnalysisComplete(true);
+      }
+    };
+    reader.onerror = () => {
+      console.error("Failed to read file");
+      toast({
+        variant: "destructive",
+        title: "File Read Error",
+        description: "Could not read the selected file.",
+      });
       setIsAnalyzing(false);
-      setAnalysisComplete(true);
-    }, 5000);
+    };
   };
 
   return (
