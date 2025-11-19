@@ -11,8 +11,9 @@ import { Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { AnalysisResult, PlagiarismResult, DetailedComparisonInfo } from "@/types/plagiarism";
+import { AnalysisResult, PlagiarismResult, PlagiarismDetails } from "@/types/plagiarism";
 import { HistoryList } from "@/components/history-list";
+import { diff_match_patch, DIFF_EQUAL, DIFF_DELETE, DIFF_INSERT } from 'diff-match-patch';
 
 const cleanCode = (code: string): string => {
   return code
@@ -58,7 +59,7 @@ export default function Home() {
   }, []);
 
   const saveHistory = (newResult: AnalysisResult) => {
-    const updatedHistory = [newResult, ...history];
+    const updatedHistory = [newResult, ...history.filter(item => item.id !== newResult.id)];
     setHistory(updatedHistory);
     localStorage.setItem("plagiarismHistory", JSON.stringify(updatedHistory));
   };
@@ -82,6 +83,12 @@ export default function Home() {
   const handleClearHistory = () => {
     setHistory([]);
     localStorage.removeItem("plagiarismHistory");
+  };
+  
+  const handleDeleteHistoryItem = (idToDelete: string) => {
+    const updatedHistory = history.filter(item => item.id !== idToDelete);
+    setHistory(updatedHistory);
+    localStorage.setItem("plagiarismHistory", JSON.stringify(updatedHistory));
   };
 
 
@@ -118,6 +125,8 @@ export default function Home() {
       const fileNames = files.map(f => f.name);
       const similarityMatrix: number[][] = Array(files.length).fill(0).map(() => Array(files.length).fill(0));
       
+      const dmp = new diff_match_patch();
+
       for (let i = 0; i < files.length; i++) {
         for (let j = i + 1; j < files.length; j++) {
           const fileA = files[i];
@@ -125,7 +134,8 @@ export default function Home() {
           
           const cleanedCodeA = cleanCode(fileA.content);
           const cleanedCodeB = cleanCode(fileB.content);
-          
+
+          // Token-based for similarity score
           const tokensA = tokenize(cleanedCodeA);
           const tokensB = tokenize(cleanedCodeB);
           
@@ -134,11 +144,11 @@ export default function Home() {
 
           let intersectionSize = 0;
           const allTokens = new Set([...mapA.keys(), ...mapB.keys()]);
-
+          
           for (const token of allTokens) {
-            if (mapA.has(token) && mapB.has(token)) {
-              intersectionSize += Math.min(mapA.get(token)!, mapB.get(token)!);
-            }
+              if (mapA.has(token) && mapB.has(token)) {
+                  intersectionSize += Math.min(mapA.get(token)!, mapB.get(token)!);
+              }
           }
           
           const totalTokens = tokensA.length + tokensB.length;
@@ -241,6 +251,7 @@ export default function Home() {
               history={history}
               onView={handleViewHistoryItem}
               onClear={handleClearHistory}
+              onDeleteItem={handleDeleteHistoryItem}
             />
         </div>
     );
@@ -260,5 +271,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
