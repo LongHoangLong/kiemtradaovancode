@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -19,67 +18,88 @@ const getShortName = (name: string) => {
 
 
 export function CodeHighlighter({ diffs, fileA, fileB }: CodeHighlighterProps) {
+    const renderDiff = () => {
+        const aLines: React.ReactNode[] = [];
+        const bLines: React.ReactNode[] = [];
+        let aLineNum = 1;
+        let bLineNum = 1;
 
-  const renderSide = (type: 'A' | 'B') => {
-    const filterOp = type === 'A' ? DiffMatchPatch.DIFF_INSERT : DiffMatchPatch.DIFF_DELETE;
-    
-    let lineNum = 1;
-    const lines: { number: number; content: React.ReactNode[] }[] = [{ number: lineNum, content: [] }];
+        const processChunk = (text: string, className: string, side: 'A' | 'B' | 'both') => {
+            const lines = text.split('\n');
+            lines.forEach((line, i) => {
+                const lineContent = <span className={className}>{line}</span>;
+                const isLastLineAndEmpty = i === lines.length - 1 && line === '';
 
-    for (const [op, text] of diffs) {
-      if (op === filterOp) continue;
+                if (isLastLineAndEmpty) {
+                    if (lines.length > 1) { // Only add new line if it's not a single empty string
+                        if (side === 'A') {
+                            aLines.push(<div key={`a-${aLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">{aLineNum++}</span></div>);
+                        }
+                        if (side === 'B') {
+                            bLines.push(<div key={`b-${bLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">{bLineNum++}</span></div>);
+                        }
+                         if (side === 'both') {
+                            aLines.push(<div key={`a-${aLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">{aLineNum++}</span></div>);
+                            bLines.push(<div key={`b-${bLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">{bLineNum++}</span></div>);
+                        }
+                    }
+                    return;
+                }
+                
+                 if (side === 'A') {
+                    aLines.push(<div key={`a-${aLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">{aLineNum++}</span>{lineContent}</div>);
+                    bLines.push(<div key={`b-${bLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">&nbsp;</span></div>);
+                } else if (side === 'B') {
+                    aLines.push(<div key={`a-${aLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">&nbsp;</span></div>);
+                    bLines.push(<div key={`b-${bLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">{bLineNum++}</span>{lineContent}</div>);
+                } else { // both
+                    aLines.push(<div key={`a-${aLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">{aLineNum++}</span>{lineContent}</div>);
+                    bLines.push(<div key={`b-${bLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">{bLineNum++}</span>{lineContent}</div>);
+                }
+            });
+        };
 
-      const textLines = text.split('\n');
-      textLines.forEach((lineText, i) => {
-        if (lineText) {
-          const highlight = op === DiffMatchPatch.DIFF_EQUAL;
-          lines[lines.length - 1].content.push(
-            <span key={`${i}-${Math.random()}`} className={highlight ? 'bg-yellow-200' : ''}>
-              {lineText}
-            </span>
-          );
+        diffs.forEach(([op, text]) => {
+            switch (op) {
+                case DiffMatchPatch.DIFF_EQUAL:
+                    processChunk(text, 'bg-yellow-200', 'both');
+                    break;
+                case DiffMatchPatch.DIFF_DELETE:
+                    processChunk(text, '', 'A');
+                    break;
+                case DiffMatchPatch.DIFF_INSERT:
+                    processChunk(text, '', 'B');
+                    break;
+            }
+        });
+
+        // Align lengths
+        while (aLines.length < bLines.length) {
+            aLines.push(<div key={`a-${aLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">&nbsp;</span></div>);
+        }
+        while (bLines.length < aLines.length) {
+            bLines.push(<div key={`b-${bLines.length}`}><span className="w-10 inline-block text-right pr-2 text-muted-foreground select-none">&nbsp;</span></div>);
         }
 
-        if (i < textLines.length - 1) {
-          lineNum++;
-          lines.push({ number: lineNum, content: [] });
-        }
-      });
-    }
+        return { aLines, bLines };
+    };
 
-    return lines.map(({ number, content }, i) => (
-      <tr key={i}>
-        <td className="px-2 text-right text-muted-foreground select-none w-10 sticky top-0 bg-muted/50">{number}</td>
-        <td className="whitespace-pre-wrap break-words pr-4 pl-2">
-          {content.length > 0 ? content : <span>&nbsp;</span>}
-        </td>
-      </tr>
-    ));
-  };
+    const { aLines, bLines } = renderDiff();
 
-
-  return (
-    <div className="grid md:grid-cols-2 gap-x-6 gap-y-4">
-        <div>
-            <h3 className="font-semibold mb-2 sticky top-0 bg-card py-2 z-10">{getShortName(fileA)}</h3>
-            <div className="text-sm bg-muted/50 rounded-md font-code h-full border max-h-[600px] overflow-auto relative">
-                <table className="w-full">
-                    <tbody className='align-top'>
-                        {renderSide('A')}
-                    </tbody>
-                </table>
+    return (
+        <div className="grid md:grid-cols-2 gap-x-6 gap-y-4">
+            <div>
+                <h3 className="font-semibold mb-2 sticky top-0 bg-card py-2 z-10">{getShortName(fileA)}</h3>
+                <div className="text-sm bg-muted/50 rounded-md font-code h-full border max-h-[600px] overflow-auto relative p-2">
+                    <div className="whitespace-pre">{aLines}</div>
+                </div>
+            </div>
+            <div>
+                <h3 className="font-semibold mb-2 sticky top-0 bg-card py-2 z-10">{getShortName(fileB)}</h3>
+                <div className="text-sm bg-muted/50 rounded-md font-code h-full border max-h-[600px] overflow-auto relative p-2">
+                    <div className="whitespace-pre">{bLines}</div>
+                </div>
             </div>
         </div>
-        <div>
-            <h3 className="font-semibold mb-2 sticky top-0 bg-card py-2 z-10">{getShortName(fileB)}</h3>
-            <div className="text-sm bg-muted/50 rounded-md font-code h-full border max-h-[600px] overflow-auto relative">
-                <table className="w-full">
-                    <tbody className='align-top'>
-                        {renderSide('B')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-  );
+    );
 }
