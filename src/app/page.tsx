@@ -24,9 +24,11 @@ const cleanCode = (code: string): string => {
 };
 
 const tokenize = (code: string): string[] => {
-    // This regex splits the code by spaces, newlines, and also separates out common programming symbols.
-    const tokens = code.split(/([,;(){}[\]=+\-*/&|!<>%^~?.:\s])/g);
-    return tokens.map(t => t.trim()).filter(t => t.length > 0);
+    // This regex is designed to capture programming language tokens more accurately.
+    // It identifies: identifiers, numbers, strings, operators, and delimiters.
+    const regex = /[a-zA-Z_]\w*|\d+(?:\.\d+)?|"[^"]*"|'[^']*'|==|!=|<=|>=|&&|\|\||>>|<<|\+\+|--|[-+*/%&|^~=<>!?:;,.(){}[\]]/g;
+    const tokens = code.match(regex);
+    return tokens || [];
 }
 
 // Function to create a frequency map of tokens
@@ -122,14 +124,15 @@ export default function Home() {
           const mapA = createTokenMap(tokensA);
           const mapB = createTokenMap(tokensB);
 
-          let commonTokens = 0;
+          let intersectionSize = 0;
           for (const [token, countA] of mapA.entries()) {
             const countB = mapB.get(token) || 0;
-            commonTokens += Math.min(countA, countB);
+            intersectionSize += Math.min(countA, countB);
           }
           
           const totalTokens = tokensA.length + tokensB.length;
-          const similarity = totalTokens > 0 ? (2 * commonTokens / totalTokens) * 100 : 0;
+          // Using Sørensen-Dice coefficient for similarity
+          const similarity = totalTokens > 0 ? (2 * intersectionSize / totalTokens) * 100 : 0;
           
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
