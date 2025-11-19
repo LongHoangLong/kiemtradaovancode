@@ -8,7 +8,6 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { CodeHighlighter } from "./code-highlighter";
-import { DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from "diff-match-patch";
 
 interface DetailedComparisonProps {
     info: DetailedComparisonInfo;
@@ -29,9 +28,6 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
         const parts = name.split('/').pop()?.split('.') ?? [];
         return parts.slice(0, -1).join('.') || name;
     };
-
-    const diffA = info.details.diffs.filter(d => d[0] !== DIFF_INSERT);
-    const diffB = info.details.diffs.filter(d => d[0] !== DIFF_DELETE);
 
     return (
         <div className="w-full flex flex-col gap-6">
@@ -68,7 +64,7 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <InfoCard title={t.similarToken} value={`${info.similarity.toFixed(1)}%`} />
-                    <InfoCard title={t.commonString} value={info.details.commonStrings} />
+                    <InfoCard title={t.commonString} value={info.details.commonTokens.length} />
                     <InfoCard title={t.tokensSV1} value={info.details.tokensA} />
                     <InfoCard title={t.tokensSV2} value={info.details.tokensB} />
                 </CardContent>
@@ -81,11 +77,11 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                 <CardContent className="grid md:grid-cols-2 gap-6">
                     <div>
                         <h3 className="font-semibold mb-2">{getShortName(info.fileA)}</h3>
-                        <CodeHighlighter diffs={diffA} />
+                        <CodeHighlighter code={info.codeA} tokensToHighlight={info.details.commonTokens} />
                     </div>
                     <div>
                         <h3 className="font-semibold mb-2">{getShortName(info.fileB)}</h3>
-                        <CodeHighlighter diffs={diffB} />
+                        <CodeHighlighter code={info.codeB} tokensToHighlight={info.details.commonTokens} />
                     </div>
                 </CardContent>
             </Card>

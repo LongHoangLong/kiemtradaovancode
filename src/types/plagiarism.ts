@@ -12,6 +12,7 @@ export type PlagiarismDetails = {
     tokensB: number;
     similarSnippets: SimilarSnippet[];
     diffs: ReturnType<diff_match_patch['diff_main']>;
+    commonTokens: string[];
 }
 
 export type PlagiarismResult = {

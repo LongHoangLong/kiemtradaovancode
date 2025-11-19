@@ -125,9 +125,14 @@ export default function Home() {
           const mapB = createTokenMap(tokensB);
 
           let intersectionSize = 0;
+          const commonTokens = new Set<string>();
+
           for (const [token, countA] of mapA.entries()) {
             const countB = mapB.get(token) || 0;
-            intersectionSize += Math.min(countA, countB);
+            if (countB > 0) {
+              intersectionSize += Math.min(countA, countB);
+              commonTokens.add(token);
+            }
           }
           
           const totalTokens = tokensA.length + tokensB.length;
@@ -149,11 +154,12 @@ export default function Home() {
             codeA: fileA.content,
             codeB: fileB.content,
             details: {
-                commonStrings: 0, // This can be deprecated or recalculated if needed
+                commonStrings: 0, 
                 tokensA: tokensA.length,
                 tokensB: tokensB.length,
                 similarSnippets: [],
-                diffs: diffs,
+                diffs: diffs, // Keep for potential future use, but highlighting is now token-based
+                commonTokens: Array.from(commonTokens),
             }
           });
           
