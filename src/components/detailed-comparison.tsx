@@ -67,3 +67,5 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
         </div>
     );
 }
+
+    

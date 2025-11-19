@@ -43,6 +43,11 @@ export const translations = {
     overallSimilarity: "Overall Similarity",
     noSimilarSnippets: "No similar snippets found.",
     fullSourceCode: "Source Code Comparison",
+    history: "Analysis History",
+    noHistory: "No history yet. Analyze a file to get started.",
+    viewReport: "View Report",
+    clearHistory: "Clear History",
+    date: "Date",
   },
   vi: {
     appName: "Kiểm tra đạo văn Code",
@@ -87,5 +92,12 @@ export const translations = {
     overallSimilarity: "Tương đồng",
     noSimilarSnippets: "Không tìm thấy đoạn mã tương tự.",
     fullSourceCode: "So sánh mã nguồn",
+    history: "Lịch sử phân tích",
+    noHistory: "Chưa có lịch sử. Hãy phân tích một tệp để bắt đầu.",
+    viewReport: "Xem lại",
+    clearHistory: "Xóa lịch sử",
+    date: "Ngày",
   },
 };
+
+    

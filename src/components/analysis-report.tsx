@@ -10,13 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { SimilarityMatrix } from "./similarity-matrix";
 import { DetailedList } from "./plagiarism-report";
 import { DetailedComparison } from "./detailed-comparison";
+import { useState } from "react";
 
 interface AnalysisReportProps {
     result: AnalysisResult;
     onReset: () => void;
-    detailedViewInfo: DetailedComparisonInfo | null;
-    onShowDetail: (info: DetailedComparisonInfo) => void;
-    onBackToReport: () => void;
 }
 
 const StatCard = ({ icon, title, value, color }: { icon: React.ReactNode, title: string, value: number, color?: string }) => (
@@ -33,11 +31,20 @@ const StatCard = ({ icon, title, value, color }: { icon: React.ReactNode, title:
     </Card>
 );
 
-export function AnalysisReport({ result, onReset, detailedViewInfo, onShowDetail, onBackToReport }: AnalysisReportProps) {
+export function AnalysisReport({ result, onReset }: AnalysisReportProps) {
     const { t } = useLanguage();
+    const [detailedViewInfo, setDetailedViewInfo] = useState<DetailedComparisonInfo | null>(null);
+
+    const handleShowDetail = (info: DetailedComparisonInfo) => {
+        setDetailedViewInfo(info);
+    };
+    
+    const handleBackToReport = () => {
+        setDetailedViewInfo(null);
+    };
 
     if (detailedViewInfo) {
-        return <DetailedComparison info={detailedViewInfo} onBack={onBackToReport} />;
+        return <DetailedComparison info={detailedViewInfo} onBack={handleBackToReport} />;
     }
 
     const handleMatrixClick = (fileAIndex: number, fileBIndex: number) => {
@@ -47,7 +54,7 @@ export function AnalysisReport({ result, onReset, detailedViewInfo, onShowDetail
             (item) => (item.fileA === fileA && item.fileB === fileB) || (item.fileA === fileB && item.fileB === fileA)
         );
         if (comparison) {
-            onShowDetail(comparison);
+            handleShowDetail(comparison);
         }
     }
 
@@ -59,7 +66,7 @@ export function AnalysisReport({ result, onReset, detailedViewInfo, onShowDetail
                     {t.startNewAnalysis}
                 </Button>
                 <h2 className="text-3xl font-bold tracking-tight">{result.fileName}</h2>
-                <p className="text-muted-foreground text-sm">{new Date().toLocaleString()}</p>
+                <p className="text-muted-foreground text-sm">{new Date(result.timestamp).toLocaleString()}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -77,9 +84,11 @@ export function AnalysisReport({ result, onReset, detailedViewInfo, onShowDetail
                     <SimilarityMatrix matrix={result.matrix} onCellClick={handleMatrixClick} />
                 </TabsContent>
                 <TabsContent value="list" className="mt-4">
-                    <DetailedList results={result.detailedList} onShowDetail={onShowDetail} />
+                    <DetailedList results={result.detailedList} onShowDetail={handleShowDetail} />
                 </TabsContent>
             </Tabs>
         </div>
     );
 }
+
+    

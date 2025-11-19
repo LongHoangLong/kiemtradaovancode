@@ -1,9 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import JSZip from "jszip";
-import DiffMatchPatch from "diff-match-patch";
 import { Header } from "@/components/layout/header";
 import { AssignmentUpload } from "@/components/assignment-upload";
 import { AnalysisReport } from "@/components/analysis-report";
@@ -13,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AnalysisResult, PlagiarismResult, DetailedComparisonInfo } from "@/types/plagiarism";
-import { Button } from "@/components/ui/button";
+import { HistoryList } from "@/components/history-list";
 
 const cleanCode = (code: string): string => {
   return code
@@ -43,39 +42,53 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [analysisComplete, setAnalysisComplete] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [detailedViewInfo, setDetailedViewInfo] = useState<DetailedComparisonInfo | null>(null);
+  const [history, setHistory] = useState<AnalysisResult[]>([]);
+
+  useEffect(() => {
+    try {
+      const storedHistory = localStorage.getItem("plagiarismHistory");
+      if (storedHistory) {
+        setHistory(JSON.parse(storedHistory));
+      }
+    } catch (error) {
+      console.error("Failed to load history from localStorage", error);
+      setHistory([]);
+    }
+  }, []);
+
+  const saveHistory = (newResult: AnalysisResult) => {
+    const updatedHistory = [newResult, ...history];
+    setHistory(updatedHistory);
+    localStorage.setItem("plagiarismHistory", JSON.stringify(updatedHistory));
+  };
 
   const handleFileChange = (selectedFile: File | null) => {
     setFile(selectedFile);
-    setAnalysisComplete(false);
     setAnalysisResult(null);
-    setDetailedViewInfo(null);
     setProgress(0);
   };
 
   const handleReset = () => {
     setFile(null);
-    setAnalysisComplete(false);
     setAnalysisResult(null);
-    setDetailedViewInfo(null);
     setProgress(0);
   };
-
-  const handleShowDetail = (info: DetailedComparisonInfo) => {
-    setDetailedViewInfo(info);
-  };
   
-  const handleBackToReport = () => {
-    setDetailedViewInfo(null);
+  const handleViewHistoryItem = (result: AnalysisResult) => {
+    setAnalysisResult(result);
   };
+
+  const handleClearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem("plagiarismHistory");
+  };
+
 
   const handleAnalysis = async () => {
     if (!file) return;
     setIsAnalyzing(true);
-    setAnalysisComplete(false);
-    setDetailedViewInfo(null);
+    setAnalysisResult(null);
     setProgress(0);
 
     try {
@@ -141,7 +154,7 @@ export default function Home() {
             similarity: similarity,
             details: {
                 codeA: fileA.content,
-                codeB: fileB.content
+                codeB: fileB.content,
             }
           });
           
@@ -151,10 +164,11 @@ export default function Home() {
       }
 
       const sortedResults = comparisons.sort((a, b) => b.similarity - a.similarity).map((res, index) => ({...res, id: `${index}`}));
-      
       const suspiciousPairs = sortedResults.filter(r => r.similarity > 75).length;
-
-      setAnalysisResult({
+      
+      const result: AnalysisResult = {
+        id: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
         fileName: file.name,
         totalSubmissions: files.length,
         totalComparisons: totalComparisons,
@@ -164,7 +178,10 @@ export default function Home() {
             fileNames: fileNames,
             similarityMatrix: similarityMatrix,
         }
-      });
+      };
+
+      setAnalysisResult(result);
+      saveHistory(result);
 
     } catch (error) {
       console.error("Analysis failed:", error);
@@ -175,7 +192,6 @@ export default function Home() {
       });
     } finally {
       setIsAnalyzing(false);
-      setAnalysisComplete(true);
       setProgress(100);
     }
   };
@@ -198,14 +214,11 @@ export default function Home() {
         );
     }
     
-    if (analysisComplete && analysisResult) {
+    if (analysisResult) {
       return (
         <AnalysisReport 
             result={analysisResult} 
             onReset={handleReset} 
-            detailedViewInfo={detailedViewInfo}
-            onShowDetail={handleShowDetail}
-            onBackToReport={handleBackToReport}
         />
       );
     }
@@ -223,6 +236,11 @@ export default function Home() {
                 onAnalyze={handleAnalysis}
                 isAnalyzing={isAnalyzing}
                 fileName={file?.name}
+            />
+            <HistoryList 
+              history={history}
+              onView={handleViewHistoryItem}
+              onClear={handleClearHistory}
             />
         </div>
     );
@@ -242,3 +260,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

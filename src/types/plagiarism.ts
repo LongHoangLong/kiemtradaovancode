@@ -20,6 +20,8 @@ export interface SimilarityMatrix {
 }
 
 export interface AnalysisResult {
+    id: string;
+    timestamp: string;
     fileName: string;
     totalSubmissions: number;
     suspiciousPairs: number;
@@ -27,3 +29,5 @@ export interface AnalysisResult {
     detailedList: PlagiarismResult[];
     matrix: SimilarityMatrix;
 }
+
+    
