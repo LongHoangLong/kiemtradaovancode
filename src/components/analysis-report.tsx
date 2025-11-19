@@ -68,7 +68,7 @@ export function AnalysisReport({ result, onReset, detailedViewInfo, onShowDetail
                 <StatCard icon={<Target className="h-6 w-6"/>} title={t.totalComparisons} value={result.totalComparisons} color="green"/>
             </div>
 
-            <Tabs defaultValue="matrix" className="w-full">
+            <Tabs defaultValue="list" className="w-full">
                 <TabsList>
                     <TabsTrigger value="matrix">{t.similarityMatrix}</TabsTrigger>
                     <TabsTrigger value="list">{t.detailedList}</TabsTrigger>
