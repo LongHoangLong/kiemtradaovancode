@@ -1,9 +1,7 @@
 
-
-import { Diff } from 'diff-match-patch';
-
 export type PlagiarismDetails = {
-    diffs: Diff[];
+    codeA: string;
+    codeB: string;
 }
 
 export type PlagiarismResult = {

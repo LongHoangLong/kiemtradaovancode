@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useLanguage } from "@/contexts/language-context";
@@ -14,13 +13,6 @@ interface DetailedComparisonProps {
     info: DetailedComparisonInfo;
     onBack: () => void;
 }
-
-const InfoCard = ({ title, value }: { title: string, value: string | number }) => (
-    <div className="flex flex-col items-center gap-1">
-        <p className="text-sm text-muted-foreground">{title}</p>
-        <p className="text-2xl font-bold">{value}</p>
-    </div>
-);
 
 export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
     const { t } = useLanguage();
@@ -65,7 +57,8 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                 </CardHeader>
                 <CardContent>
                     <CodeHighlighter
-                        diffs={info.details.diffs}
+                        codeA={info.details.codeA}
+                        codeB={info.details.codeB}
                         fileA={info.fileA}
                         fileB={info.fileB}
                     />

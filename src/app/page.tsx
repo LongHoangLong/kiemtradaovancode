@@ -105,8 +105,6 @@ export default function Home() {
       const fileNames = files.map(f => f.name);
       const similarityMatrix: number[][] = Array(files.length).fill(0).map(() => Array(files.length).fill(0));
       
-      const dmp = new DiffMatchPatch();
-
       for (let i = 0; i < files.length; i++) {
         for (let j = i + 1; j < files.length; j++) {
           const fileA = files[i];
@@ -115,7 +113,6 @@ export default function Home() {
           const cleanedCodeA = cleanCode(fileA.content);
           const cleanedCodeB = cleanCode(fileB.content);
           
-          // 1. Token-based similarity for accuracy
           const tokensA = tokenize(cleanedCodeA);
           const tokensB = tokenize(cleanedCodeB);
           
@@ -137,17 +134,14 @@ export default function Home() {
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
           
-          // 2. Diff for highlighting on original content
-          const diffs = dmp.diff_main(fileA.content, fileB.content);
-          dmp.diff_cleanupSemantic(diffs);
-
           comparisons.push({
             id: `${i}-${j}`,
             fileA: fileA.name,
             fileB: fileB.name,
             similarity: similarity,
             details: {
-                diffs: diffs,
+                codeA: fileA.content,
+                codeB: fileB.content
             }
           });
           
