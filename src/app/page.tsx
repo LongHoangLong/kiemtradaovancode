@@ -24,14 +24,11 @@ const cleanCode = (code: string): string => {
 };
 
 const tokenize = (code: string): string[] => {
-    // This regex is designed to capture programming language tokens more accurately.
-    // It identifies: identifiers, numbers, strings, operators, and delimiters.
     const regex = /[a-zA-Z_]\w*|\d+(?:\.\d+)?|"[^"]*"|'[^']*'|==|!=|<=|>=|&&|\|\||>>|<<|\+\+|--|[-+*/%&|^~=<>!?:;,.(){}[\]]/g;
     const tokens = code.match(regex);
     return tokens || [];
 }
 
-// Function to create a frequency map of tokens
 const createTokenMap = (tokens: string[]): Map<string, number> => {
   const map = new Map<string, number>();
   for (const token of tokens) {
@@ -103,7 +100,6 @@ export default function Home() {
       }
 
       const comparisons: PlagiarismResult[] = [];
-      const dmp = new DiffMatchPatch();
       const totalComparisons = (files.length * (files.length - 1)) / 2;
       let comparisonsDone = 0;
       const fileNames = files.map(f => f.name);
@@ -141,10 +137,33 @@ export default function Home() {
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
           
-          // 2. Diff-based comparison for highlighting (using original content)
-          const diffs = dmp.diff_main(fileA.content, fileB.content);
-          dmp.diff_cleanupSemantic(diffs);
+          // 2. Line-based comparison for highlighting
+          const linesA = fileA.content.split('\n');
+          const linesB = fileB.content.split('\n');
+          const linesASet = new Set(linesA.map(line => line.trim()).filter(line => line.length > 0));
+          const matchedLinesA: number[] = [];
+          const matchedLinesB: number[] = [];
+
+          linesA.forEach((line, index) => {
+            if (line.trim().length > 0 && linesASet.has(line.trim())) {
+                 const foundIndex = linesB.findIndex(lineB => lineB.trim() === line.trim());
+                 if (foundIndex !== -1) {
+                    matchedLinesA.push(index);
+                 }
+            }
+          });
           
+          const linesBSet = new Set(linesB.map(line => line.trim()).filter(line => line.length > 0));
+          linesB.forEach((line, index) => {
+            if(line.trim().length > 0 && linesBSet.has(line.trim())){
+                const foundIndex = linesA.findIndex(lineA => lineA.trim() === line.trim());
+                if(foundIndex !== -1){
+                    matchedLinesB.push(index);
+                }
+            }
+          });
+
+
           comparisons.push({
             id: `${i}-${j}`,
             fileA: fileA.name,
@@ -155,7 +174,8 @@ export default function Home() {
             details: {
                 tokensA: tokensA.length,
                 tokensB: tokensB.length,
-                diffs: diffs,
+                matchedLinesA: matchedLinesA,
+                matchedLinesB: matchedLinesB,
             }
           });
           

@@ -76,11 +76,11 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                 <CardContent className="grid md:grid-cols-2 gap-6">
                     <div>
                         <h3 className="font-semibold mb-2">{getShortName(info.fileA)}</h3>
-                        <CodeHighlighter diffs={info.details.diffs} type="A" />
+                        <CodeHighlighter code={info.codeA} matchedLines={info.details.matchedLinesA} />
                     </div>
                     <div>
                         <h3 className="font-semibold mb-2">{getShortName(info.fileB)}</h3>
-                        <CodeHighlighter diffs={info.details.diffs} type="B" />
+                        <CodeHighlighter code={info.codeB} matchedLines={info.details.matchedLinesB} />
                     </div>
                 </CardContent>
             </Card>

@@ -1,10 +1,10 @@
 
-import type { diff_match_patch } from "diff-match-patch";
 
 export type PlagiarismDetails = {
     tokensA: number;
     tokensB: number;
-    diffs: ReturnType<diff_match_patch['diff_main']>;
+    matchedLinesA: number[];
+    matchedLinesB: number[];
 }
 
 export type PlagiarismResult = {
