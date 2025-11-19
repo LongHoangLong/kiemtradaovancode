@@ -9,49 +9,85 @@ interface CodeHighlighterProps {
   type: 'A' | 'B';
 }
 
-export function CodeHighlighter({ diffs, type }: CodeHighlighterProps) {
+const renderDiff = (diffs: Diff[], type: 'A' | 'B') => {
+  let html = '';
+  let lineNum = 1;
+  const lines = diffsToLines(diffs, type);
 
-  const getHighlightColor = (op: number) => {
-    switch(op) {
-      case DiffMatchPatch.DIFF_INSERT:
-        return type === 'B' ? 'rgba(0, 255, 0, 0.2)' : 'transparent';
-      case DiffMatchPatch.DIFF_DELETE:
-        return type === 'A' ? 'rgba(255, 0, 0, 0.2)' : 'transparent';
-      case DiffMatchPatch.DIFF_EQUAL:
-        return 'rgba(255, 255, 0, 0.3)';
-      default:
-        return 'transparent';
-    }
-  };
+  return lines.map((line, index) => {
+    const { op, text } = line;
+    let symbol = ' ';
+    let bgColor = 'transparent';
+    let textColor = 'inherit';
 
-  const getTextDecoration = (op: number) => {
-    if (type === 'A' && op === DiffMatchPatch.DIFF_DELETE) {
-      return 'line-through';
+    if (op === DiffMatchPatch.DIFF_INSERT) {
+      symbol = '+';
+      bgColor = 'rgba(46, 160, 67, 0.15)';
+      textColor = '#e6ffec';
+    } else if (op === DiffMatchPatch.DIFF_DELETE) {
+      symbol = '-';
+      bgColor = 'rgba(248, 81, 73, 0.15)';
+      textColor = '#ffebe9';
     }
-    return 'none';
+
+    return (
+      <tr key={index} style={{ backgroundColor: bgColor }}>
+        <td className="px-2 text-right text-muted-foreground select-none w-10">{lineNum++}</td>
+        <td className="px-2 text-muted-foreground select-none w-4">{symbol}</td>
+        <td className="whitespace-pre-wrap break-words pr-4">
+          <span style={{ color: textColor }}>{text}</span>
+        </td>
+      </tr>
+    );
+  });
+};
+
+const diffsToLines = (diffs: Diff[], type: 'A' | 'B') => {
+  const lines: { op: number; text: string }[] = [];
+  let currentLine = '';
+  let lineOp = DiffMatchPatch.DIFF_EQUAL;
+
+  for (let i = 0; i < diffs.length; i++) {
+    const [op, text] = diffs[i];
+
+    if (
+      (type === 'A' && op === DiffMatchPatch.DIFF_INSERT) ||
+      (type === 'B' && op === DiffMatchPatch.DIFF_DELETE)
+    ) {
+      continue;
+    }
+
+    if (lineOp === DiffMatchPatch.DIFF_EQUAL) {
+        lineOp = op;
+    }
+
+    const textParts = text.split('\n');
+    currentLine += textParts[0];
+
+    for (let j = 1; j < textParts.length; j++) {
+      lines.push({ op: lineOp, text: currentLine });
+      currentLine = textParts[j];
+      lineOp = op;
+    }
+  }
+  
+  // Add the last line if it's not empty
+  if (currentLine) {
+    lines.push({ op: lineOp, text: currentLine });
   }
 
+  return lines;
+};
+
+
+export function CodeHighlighter({ diffs, type }: CodeHighlighterProps) {
   return (
-    <pre className="text-sm bg-muted/50 p-4 rounded-md overflow-x-auto font-code h-full whitespace-pre-wrap break-words">
-      <code>
-        {diffs.map(([op, text], index) => {
-          if ((type === 'A' && op === DiffMatchPatch.DIFF_INSERT) || (type === 'B' && op === DiffMatchPatch.DIFF_DELETE)) {
-            // Don't render the 'other' file's additions/deletions
-            return null;
-          }
-          return (
-            <span
-              key={index}
-              style={{
-                backgroundColor: getHighlightColor(op),
-                textDecoration: getTextDecoration(op),
-              }}
-            >
-              {text}
-            </span>
-          );
-        })}
-      </code>
-    </pre>
+    <div className="text-sm bg-muted/50 rounded-md overflow-x-auto font-code h-full border">
+      <table className="w-full">
+        <tbody>
+          {renderDiff(diffs, type)}
+        </tbody>
+      </table>
+    </div>
   );
 }
