@@ -3,8 +3,6 @@
 import { Diff } from 'diff-match-patch';
 
 export type PlagiarismDetails = {
-    tokensA: number;
-    tokensB: number;
     diffs: Diff[];
 }
 
@@ -13,8 +11,6 @@ export type PlagiarismResult = {
     fileA: string;
     fileB: string;
     similarity: number;
-    codeA: string;
-    codeB: string;
     details: PlagiarismDetails;
 };
 

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useLanguage } from "@/contexts/language-context";
@@ -8,8 +9,6 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { CodeHighlighter } from "./code-highlighter";
-import DiffMatchPatch from 'diff-match-patch';
-
 
 interface DetailedComparisonProps {
     info: DetailedComparisonInfo;
@@ -59,17 +58,6 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                     </AlertDescription>
                 </Alert>
             )}
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t.detailedInfo}</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <InfoCard title={t.similarToken} value={`${info.similarity.toFixed(1)}%`} />
-                    <InfoCard title={t.tokensSV1} value={info.details.tokensA} />
-                    <InfoCard title={t.tokensSV2} value={info.details.tokensB} />
-                </CardContent>
-            </Card>
             
              <Card>
                 <CardHeader>
@@ -78,8 +66,6 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                 <CardContent>
                     <CodeHighlighter
                         diffs={info.details.diffs}
-                        originalA={info.codeA}
-                        originalB={info.codeB}
                         fileA={info.fileA}
                         fileB={info.fileB}
                     />
