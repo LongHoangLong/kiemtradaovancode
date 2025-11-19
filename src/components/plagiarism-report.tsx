@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -16,32 +17,29 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/language-context";
 import { Eye } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { PlagiarismResult } from "@/types/plagiarism";
+import { Card, CardContent } from "./ui/card";
 
-interface PlagiarismReportProps {
+interface DetailedListProps {
   results: PlagiarismResult[];
 }
 
-export function PlagiarismReport({ results }: PlagiarismReportProps) {
+export function DetailedList({ results }: DetailedListProps) {
   const { t } = useLanguage();
 
   const getProgressColor = (similarity: number) => {
     if (similarity > 75) return "bg-destructive";
-    if (similarity > 50) return "bg-accent";
-    return "bg-primary";
+    if (similarity > 50) return "bg-orange-500";
+    return "bg-green-500";
   };
   
   return (
     <Card className="w-full shadow-lg">
-      <CardHeader>
-        <CardTitle>{t.reportTitle}</CardTitle>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         {results.length > 0 ? (
           <div className="border rounded-lg">
             <Table>
@@ -61,7 +59,7 @@ export function PlagiarismReport({ results }: PlagiarismReportProps) {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col items-center justify-center gap-2">
-                        <span className={`font-semibold ${result.similarity > 75 ? 'text-destructive' : result.similarity > 50 ? 'text-accent-foreground' : 'text-foreground'}`}>{result.similarity.toFixed(1)}%</span>
+                        <span className={`font-semibold ${result.similarity > 75 ? 'text-destructive' : result.similarity > 50 ? 'text-orange-500' : 'text-green-600'}`}>{result.similarity.toFixed(1)}%</span>
                         <Progress value={result.similarity} indicatorClassName={getProgressColor(result.similarity)} className="h-2 w-full max-w-[150px]" />
                       </div>
                     </TableCell>
@@ -94,7 +92,7 @@ export function PlagiarismReport({ results }: PlagiarismReportProps) {
                               </CardHeader>
                               <CardContent className="flex-1 overflow-auto">
                                 <ScrollArea className="h-full">
-                                  <pre className="text-xs bg-muted p-3 rounded-md font-code"><code className="text-destructive">{result.codeB || 'Code not available.'}</code></pre>
+                                  <pre className="text-xs bg-muted p-3 rounded-md font-code"><code>{result.codeB || 'Code not available.'}</code></pre>
                                 </ScrollArea>
                               </CardContent>
                             </Card>
@@ -109,7 +107,7 @@ export function PlagiarismReport({ results }: PlagiarismReportProps) {
           </div>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
-            <p>No significant plagiarism detected or no files to compare.</p>
+            <p>{t.noSignificantPlagiarism}</p>
           </div>
         )}
       </CardContent>
