@@ -21,7 +21,7 @@ import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/contexts/language-context";
 import { Eye } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
-import { PlagiarismResult } from "@/ai/schema/plagiarism";
+import { PlagiarismResult } from "@/types/plagiarism";
 
 interface PlagiarismReportProps {
   results: PlagiarismResult[];

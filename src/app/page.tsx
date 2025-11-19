@@ -1,6 +1,9 @@
+
 "use client";
 
 import { useState } from "react";
+import JSZip from "jszip";
+import DiffMatchPatch from "diff-match-patch";
 import { Header } from "@/components/layout/header";
 import { AssignmentUpload } from "@/components/assignment-upload";
 import { PlagiarismReport } from "@/components/plagiarism-report";
@@ -9,10 +12,16 @@ import { Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { analyzePlagiarism } from "@/ai/flows/plagiarism-flow";
 import { useToast } from "@/hooks/use-toast";
-import { PlagiarismResult } from "@/ai/schema/plagiarism";
+import { PlagiarismResult } from "@/types/plagiarism";
 
+// A simple text cleaner to remove comments, newlines, and extra spaces
+const cleanCode = (code: string): string => {
+  return code
+    .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "") // remove comments
+    .replace(/\s+/g, " ") // collapse whitespace
+    .trim();
+};
 
 export default function Home() {
   const { t } = useLanguage();
@@ -36,56 +45,82 @@ export default function Home() {
     setAnalysisComplete(false);
     setProgress(0);
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      let fileDataUri = reader.result as string;
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const files: { name: string; content: string }[] = [];
 
-      // Normalize MIME type for zip files
-      if (file.type === 'application/x-zip-compressed' && fileDataUri.startsWith('data:application/x-zip-compressed')) {
-        fileDataUri = fileDataUri.replace('data:application/x-zip-compressed', 'data:application/zip');
+      // Extract all files from the zip
+      for (const filename in zip.files) {
+        if (!zip.files[filename].dir) {
+          const content = await zip.files[filename].async("string");
+          files.push({ name: filename, content });
+        }
       }
-      
-      // Simulate progress for user feedback during analysis
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => (prev < 90 ? prev + 5 : 90));
-      }, 500);
 
-      try {
-        const plagiarismResults = await analyzePlagiarism({
-          zipFileDataUri: fileDataUri,
-        });
-
-        clearInterval(progressInterval);
-        setProgress(100);
-        
-        // Sort results by similarity descending
-        const sortedResults = plagiarismResults.sort((a, b) => b.similarity - a.similarity);
-        
-        setResults(sortedResults.map((r, i) => ({...r, id: (i+1).toString()})));
-
-      } catch (error) {
-        console.error("Analysis failed:", error);
+      if (files.length < 2) {
         toast({
           variant: "destructive",
-          title: "Analysis Failed",
-          description: "An unexpected error occurred during the analysis.",
+          title: "Not enough files",
+          description: "The zip file must contain at least two files to compare.",
         });
-        clearInterval(progressInterval);
-      } finally {
         setIsAnalyzing(false);
-        setAnalysisComplete(true);
+        return;
       }
-    };
-    reader.onerror = () => {
-      console.error("Failed to read file");
+
+      const comparisons: PlagiarismResult[] = [];
+      const dmp = new DiffMatchPatch();
+      const totalComparisons = (files.length * (files.length - 1)) / 2;
+      let comparisonsDone = 0;
+
+      // Compare each pair of files
+      for (let i = 0; i < files.length; i++) {
+        for (let j = i + 1; j < files.length; j++) {
+          const fileA = files[i];
+          const fileB = files[j];
+          
+          const cleanA = cleanCode(fileA.content);
+          const cleanB = cleanCode(fileB.content);
+
+          const diffs = dmp.diff_main(cleanA, cleanB);
+          dmp.diff_cleanupSemantic(diffs);
+          
+          const distance = dmp.diff_levenshtein(diffs);
+          const longerTextLength = Math.max(cleanA.length, cleanB.length);
+          const similarity = (1 - distance / longerTextLength) * 100;
+          
+          if (similarity > 10) { // Only show significant similarities
+            comparisons.push({
+              id: `${i}-${j}`,
+              fileA: fileA.name,
+              fileB: fileB.name,
+              similarity: similarity,
+              codeA: fileA.content,
+              codeB: fileB.content,
+            });
+          }
+          
+          comparisonsDone++;
+          setProgress(Math.round((comparisonsDone / totalComparisons) * 100));
+        }
+      }
+
+      // Sort results by similarity descending
+      const sortedResults = comparisons.sort((a, b) => b.similarity - a.similarity);
+      
+      setResults(sortedResults.slice(0, 10)); // Limit to top 10 results
+
+    } catch (error) {
+      console.error("Analysis failed:", error);
       toast({
         variant: "destructive",
-        title: "File Read Error",
-        description: "Could not read the selected file.",
+        title: "Analysis Failed",
+        description: "An unexpected error occurred during the analysis. The file might be corrupted.",
       });
+    } finally {
       setIsAnalyzing(false);
-    };
+      setAnalysisComplete(true);
+      setProgress(100);
+    }
   };
 
   return (
