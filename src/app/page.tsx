@@ -141,8 +141,8 @@ export default function Home() {
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
           
-          // 2. Diff-based comparison for highlighting (using cleaned content for consistency)
-          const diffs = dmp.diff_main(cleanedCodeA, cleanedCodeB);
+          // 2. Diff-based comparison for highlighting (using original content)
+          const diffs = dmp.diff_main(fileA.content, fileB.content);
           dmp.diff_cleanupSemantic(diffs);
           
           comparisons.push({
@@ -150,10 +150,8 @@ export default function Home() {
             fileA: fileA.name,
             fileB: fileB.name,
             similarity: similarity,
-            codeA: fileA.content, // Keep original code for display
-            codeB: fileB.content, // Keep original code for display
-            cleanedCodeA: cleanedCodeA,
-            cleanedCodeB: cleanedCodeB,
+            codeA: fileA.content,
+            codeB: fileB.content,
             details: {
                 tokensA: tokensA.length,
                 tokensB: tokensB.length,

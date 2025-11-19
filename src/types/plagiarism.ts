@@ -14,8 +14,6 @@ export type PlagiarismResult = {
     similarity: number;
     codeA: string;
     codeB: string;
-    cleanedCodeA: string;
-    cleanedCodeB: string;
     details: PlagiarismDetails;
 };
 
