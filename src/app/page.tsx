@@ -4,16 +4,15 @@
 import { useState, useEffect } from "react";
 import JSZip from "jszip";
 import { Header } from "@/components/layout/header";
-import { AssignmentUpload } from "@/components/assignment-upload";
 import { AnalysisReport } from "@/components/analysis-report";
 import { useLanguage } from "@/contexts/language-context";
 import { Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { AnalysisResult, PlagiarismResult, PlagiarismDetails } from "@/types/plagiarism";
-import { HistoryList } from "@/components/history-list";
-import { diff_match_patch, DIFF_EQUAL, DIFF_DELETE, DIFF_INSERT } from 'diff-match-patch';
+import { AnalysisResult, PlagiarismResult } from "@/types/plagiarism";
+import { diff_match_patch } from 'diff-match-patch';
+import { MainView } from "@/components/main-view";
 
 const cleanCode = (code: string): string => {
   return code
@@ -156,6 +155,9 @@ export default function Home() {
           
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
+
+          const diffs = dmp.diff_main(fileA.content, fileB.content);
+          dmp.diff_cleanupSemantic(diffs);
           
           comparisons.push({
             id: `${i}-${j}`,
@@ -163,8 +165,7 @@ export default function Home() {
             fileB: fileB.name,
             similarity: similarity,
             details: {
-                codeA: fileA.content,
-                codeB: fileB.content,
+                diffs: diffs,
             }
           });
           
@@ -206,10 +207,12 @@ export default function Home() {
     }
   };
 
-  const currentView = () => {
-    if(isAnalyzing) {
-        return (
-            <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
+  return (
+    <div className="flex flex-col min-h-screen bg-muted/40">
+      <Header />
+      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {isAnalyzing ? (
+           <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
                 <Card className="w-full max-w-md shadow-md">
                     <CardContent className="p-6 flex flex-col items-center gap-4">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -221,47 +224,23 @@ export default function Home() {
                     </CardContent>
                 </Card>
             </div>
-        );
-    }
-    
-    if (analysisResult) {
-      return (
-        <AnalysisReport 
-            result={analysisResult} 
-            onReset={handleReset} 
-        />
-      );
-    }
-
-    return (
-        <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
-            <div className="flex flex-col gap-2">
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
-                {t.appName}
-                </h2>
-                <p className="text-lg text-muted-foreground">{t.tagline}</p>
-            </div>
-            <AssignmentUpload
-                onFileChange={handleFileChange}
-                onAnalyze={handleAnalysis}
-                isAnalyzing={isAnalyzing}
-                fileName={file?.name}
-            />
-            <HistoryList 
-              history={history}
-              onView={handleViewHistoryItem}
-              onClear={handleClearHistory}
-              onDeleteItem={handleDeleteHistoryItem}
-            />
-        </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col min-h-screen bg-muted/40">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {currentView()}
+        ) : analysisResult ? (
+          <AnalysisReport 
+              result={analysisResult} 
+              onReset={handleReset} 
+          />
+        ) : (
+          <MainView
+            onFileChange={handleFileChange}
+            onAnalyze={handleAnalysis}
+            isAnalyzing={isAnalyzing}
+            fileName={file?.name}
+            history={history}
+            onViewHistory={handleViewHistoryItem}
+            onClearHistory={handleClearHistory}
+            onDeleteHistoryItem={handleDeleteHistoryItem}
+          />
+        )}
       </main>
       <footer className="py-4 px-6 md:px-8">
         <div className="container mx-auto text-center text-sm text-muted-foreground">

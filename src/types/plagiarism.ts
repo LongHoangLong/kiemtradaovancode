@@ -1,7 +1,8 @@
 
+import { diff_match_patch } from 'diff-match-patch';
+
 export type PlagiarismDetails = {
-    codeA: string;
-    codeB: string;
+    diffs: [number, string][];
 }
 
 export type PlagiarismResult = {
@@ -29,5 +30,3 @@ export interface AnalysisResult {
     detailedList: PlagiarismResult[];
     matrix: SimilarityMatrix;
 }
-
-    
