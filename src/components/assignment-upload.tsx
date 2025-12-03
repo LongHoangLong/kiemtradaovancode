@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, DragEvent } from "react";
@@ -5,6 +6,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UploadCloud, File, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AssignmentUploadProps {
   onFileChange: (file: File | null) => void;
@@ -15,6 +17,7 @@ interface AssignmentUploadProps {
 
 export function AssignmentUpload({ onFileChange, onAnalyze, isAnalyzing, fileName }: AssignmentUploadProps) {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [isDragActive, setIsDragActive] = useState(false);
 
   const handleFileSelect = (files: FileList | null) => {
@@ -24,6 +27,11 @@ export function AssignmentUpload({ onFileChange, onAnalyze, isAnalyzing, fileNam
         onFileChange(file);
       } else {
         onFileChange(null);
+        toast({
+          variant: "destructive",
+          title: t.invalidFileTypeTitle,
+          description: t.invalidFileTypeDescription,
+        });
       }
     }
   };

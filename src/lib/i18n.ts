@@ -55,6 +55,8 @@ export const translations = {
     cancel: "Cancel",
     confirm: "Confirm",
     fileName: "File Name",
+    invalidFileTypeTitle: "Invalid File Type",
+    invalidFileTypeDescription: "Please select a .zip or .rar file only.",
   },
   vi: {
     appName: "Kiểm tra đạo văn Code",
@@ -111,5 +113,7 @@ export const translations = {
     cancel: "Hủy",
     confirm: "Xác nhận",
     fileName: "Tên tệp",
+    invalidFileTypeTitle: "Định dạng tệp không hợp lệ",
+    invalidFileTypeDescription: "Vui lòng chỉ chọn tệp .zip hoặc .rar.",
   },
 };
