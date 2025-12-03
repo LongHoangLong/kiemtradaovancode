@@ -21,7 +21,7 @@ import {
 
 
 interface AnalysisReportProps {
-    result: AnalysisResult;
+    result: AnalysisResult | null;
     onReset: () => void;
 }
 
@@ -52,19 +52,17 @@ export function AnalysisReport({ result, onReset }: AnalysisReportProps) {
         setDetailedViewInfo(null);
     };
 
-    if (detailedViewInfo) {
-        return <DetailedComparison info={detailedViewInfo} onBack={handleBackToReport} />;
-    }
-    
     const filteredDetailedList = useMemo(() => {
+        if (!result) return [];
         if (similarityThreshold === 0) {
             return result.detailedList;
         }
         return result.detailedList.filter(item => item.similarity >= similarityThreshold);
-    }, [result.detailedList, similarityThreshold]);
+    }, [result, similarityThreshold]);
 
 
     const handleMatrixClick = (fileAIndex: number, fileBIndex: number) => {
+        if (!result) return;
         const fileA = result.matrix.fileNames[fileAIndex];
         const fileB = result.matrix.fileNames[fileBIndex];
         const comparison = result.detailedList.find(
@@ -73,6 +71,14 @@ export function AnalysisReport({ result, onReset }: AnalysisReportProps) {
         if (comparison) {
             handleShowDetail(comparison);
         }
+    }
+
+    if (!result) {
+        return null;
+    }
+
+    if (detailedViewInfo) {
+        return <DetailedComparison info={detailedViewInfo} onBack={handleBackToReport} />;
     }
 
     return (

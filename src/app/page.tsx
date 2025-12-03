@@ -12,7 +12,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AnalysisResult, PlagiarismResult } from "@/types/plagiarism";
 import { diff_match_patch } from 'diff-match-patch';
-import { MainView } from "@/components/main-view";
+import { AssignmentUpload } from "@/components/assignment-upload";
+import { HistoryList } from "@/components/history-list";
 
 const cleanCode = (code: string): string => {
   return code
@@ -211,36 +212,50 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-muted/40">
       <Header />
       <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {isAnalyzing ? (
-           <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
-                <Card className="w-full max-w-md shadow-md">
-                    <CardContent className="p-6 flex flex-col items-center gap-4">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <h3 className="text-lg font-semibold">{t.analyzing}</h3>
-                        <p className="text-sm text-muted-foreground text-center">
-                        {t.analyzingDetail}
-                        </p>
-                        <Progress value={progress} className="w-full" />
-                    </CardContent>
-                </Card>
-            </div>
-        ) : analysisResult ? (
-          <AnalysisReport 
+        <div className={isAnalyzing ? '' : 'hidden'}>
+          <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
+              <Card className="w-full max-w-md shadow-md">
+                  <CardContent className="p-6 flex flex-col items-center gap-4">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <h3 className="text-lg font-semibold">{t.analyzing}</h3>
+                      <p className="text-sm text-muted-foreground text-center">
+                      {t.analyzingDetail}
+                      </p>
+                      <Progress value={progress} className="w-full" />
+                  </CardContent>
+              </Card>
+          </div>
+        </div>
+
+        <div className={!isAnalyzing && !!analysisResult ? '' : 'hidden'}>
+           <AnalysisReport 
               result={analysisResult} 
               onReset={handleReset} 
           />
-        ) : (
-          <MainView
-            onFileChange={handleFileChange}
-            onAnalyze={handleAnalysis}
-            isAnalyzing={isAnalyzing}
-            fileName={file?.name}
-            history={history}
-            onViewHistory={handleViewHistoryItem}
-            onClearHistory={handleClearHistory}
-            onDeleteHistoryItem={handleDeleteHistoryItem}
-          />
-        )}
+        </div>
+        
+        <div className={!isAnalyzing && !analysisResult ? '' : 'hidden'}>
+           <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-8">
+              <div className="flex flex-col gap-2">
+                  <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
+                  {t.appName}
+                  </h2>
+                  <p className="text-lg text-muted-foreground">{t.tagline}</p>
+              </div>
+              <AssignmentUpload
+                  onFileChange={handleFileChange}
+                  onAnalyze={handleAnalysis}
+                  isAnalyzing={isAnalyzing}
+                  fileName={file?.name}
+              />
+              <HistoryList 
+                history={history}
+                onView={handleViewHistoryItem}
+                onClear={handleClearHistory}
+                onDeleteItem={handleDeleteHistoryItem}
+              />
+          </div>
+        </div>
       </main>
       <footer className="py-4 px-6 md:px-8">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
