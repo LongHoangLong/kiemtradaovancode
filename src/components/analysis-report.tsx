@@ -4,13 +4,21 @@
 import { useLanguage } from "@/contexts/language-context";
 import { AnalysisResult, DetailedComparisonInfo } from "@/types/plagiarism";
 import { Button } from "./ui/button";
-import { ArrowLeft, File, AlertTriangle, Target } from "lucide-react";
+import { ArrowLeft, File, AlertTriangle, Target, Filter } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { SimilarityMatrix } from "./similarity-matrix";
 import { DetailedList } from "./plagiarism-report";
 import { DetailedComparison } from "./detailed-comparison";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 interface AnalysisReportProps {
     result: AnalysisResult;
@@ -34,6 +42,7 @@ const StatCard = ({ icon, title, value, color }: { icon: React.ReactNode, title:
 export function AnalysisReport({ result, onReset }: AnalysisReportProps) {
     const { t } = useLanguage();
     const [detailedViewInfo, setDetailedViewInfo] = useState<DetailedComparisonInfo | null>(null);
+    const [similarityThreshold, setSimilarityThreshold] = useState(0);
 
     const handleShowDetail = (info: DetailedComparisonInfo) => {
         setDetailedViewInfo(info);
@@ -46,6 +55,14 @@ export function AnalysisReport({ result, onReset }: AnalysisReportProps) {
     if (detailedViewInfo) {
         return <DetailedComparison info={detailedViewInfo} onBack={handleBackToReport} />;
     }
+    
+    const filteredDetailedList = useMemo(() => {
+        if (similarityThreshold === 0) {
+            return result.detailedList;
+        }
+        return result.detailedList.filter(item => item.similarity >= similarityThreshold);
+    }, [result.detailedList, similarityThreshold]);
+
 
     const handleMatrixClick = (fileAIndex: number, fileBIndex: number) => {
         const fileA = result.matrix.fileNames[fileAIndex];
@@ -84,11 +101,29 @@ export function AnalysisReport({ result, onReset }: AnalysisReportProps) {
                     <SimilarityMatrix matrix={result.matrix} onCellClick={handleMatrixClick} />
                 </TabsContent>
                 <TabsContent value="list" className="mt-4">
-                    <DetailedList results={result.detailedList} onShowDetail={handleShowDetail} />
+                    <div className="flex justify-end mb-4">
+                        <div className="flex items-center gap-2">
+                             <Filter className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-muted-foreground">{t.filterBy}:</span>
+                            <Select
+                                value={String(similarityThreshold)}
+                                onValueChange={(value) => setSimilarityThreshold(Number(value))}
+                            >
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder={t.filterBy} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="0">{t.showAll}</SelectItem>
+                                    <SelectItem value="25">{t.over25}</SelectItem>
+                                    <SelectItem value="50">{t.over50}</SelectItem>
+                                    <SelectItem value="75">{t.over75}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DetailedList results={filteredDetailedList} onShowDetail={handleShowDetail} />
                 </TabsContent>
             </Tabs>
         </div>
     );
 }
-
-    
