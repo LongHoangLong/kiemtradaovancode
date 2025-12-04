@@ -57,6 +57,12 @@ export default function Home() {
     }
   }, []);
 
+  useEffect(() => {
+    if (analysisResult) {
+      window.scrollTo(0, 0);
+    }
+  }, [analysisResult]);
+
   const saveHistory = (newResult: AnalysisResult) => {
     const updatedHistory = [newResult, ...history.filter(item => item.id !== newResult.id)];
     setHistory(updatedHistory);

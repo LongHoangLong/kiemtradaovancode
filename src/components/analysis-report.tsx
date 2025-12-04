@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { SimilarityMatrix } from "./similarity-matrix";
 import { DetailedList } from "./plagiarism-report";
 import { DetailedComparison } from "./detailed-comparison";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -44,12 +44,19 @@ export function AnalysisReport({ result, onReset }: AnalysisReportProps) {
     const [detailedViewInfo, setDetailedViewInfo] = useState<DetailedComparisonInfo | null>(null);
     const [similarityThreshold, setSimilarityThreshold] = useState(0);
 
+    useEffect(() => {
+        if (detailedViewInfo) {
+            window.scrollTo(0, 0);
+        }
+    }, [detailedViewInfo]);
+
     const handleShowDetail = (info: DetailedComparisonInfo) => {
         setDetailedViewInfo(info);
     };
     
     const handleBackToReport = () => {
         setDetailedViewInfo(null);
+        window.scrollTo(0, 0);
     };
 
     const filteredDetailedList = useMemo(() => {
