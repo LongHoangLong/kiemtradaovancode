@@ -57,7 +57,8 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                 </CardHeader>
                 <CardContent>
                     <CodeHighlighter
-                        diffs={info.details.diffs}
+                        contentA={info.details.contentA}
+                        contentB={info.details.contentB}
                         fileA={info.fileA}
                         fileB={info.fileB}
                     />

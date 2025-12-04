@@ -2,7 +2,8 @@
 import { diff_match_patch } from 'diff-match-patch';
 
 export type PlagiarismDetails = {
-    diffs: [number, string][];
+    contentA: string;
+    contentB: string;
 }
 
 export type PlagiarismResult = {

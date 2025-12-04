@@ -11,7 +11,6 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AnalysisResult, PlagiarismResult } from "@/types/plagiarism";
-import { diff_match_patch } from 'diff-match-patch';
 import { AssignmentUpload } from "@/components/assignment-upload";
 import { HistoryList } from "@/components/history-list";
 
@@ -125,8 +124,6 @@ export default function Home() {
       const fileNames = files.map(f => f.name);
       const similarityMatrix: number[][] = Array(files.length).fill(0).map(() => Array(files.length).fill(0));
       
-      const dmp = new diff_match_patch();
-
       for (let i = 0; i < files.length; i++) {
         for (let j = i + 1; j < files.length; j++) {
           const fileA = files[i];
@@ -156,9 +153,6 @@ export default function Home() {
           
           similarityMatrix[i][j] = similarity;
           similarityMatrix[j][i] = similarity;
-
-          const diffs = dmp.diff_main(fileA.content, fileB.content);
-          dmp.diff_cleanupSemantic(diffs);
           
           comparisons.push({
             id: `${i}-${j}`,
@@ -166,7 +160,8 @@ export default function Home() {
             fileB: fileB.name,
             similarity: similarity,
             details: {
-                diffs: diffs,
+                contentA: fileA.content,
+                contentB: fileB.content,
             }
           });
           
