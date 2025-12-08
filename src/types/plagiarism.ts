@@ -1,9 +1,13 @@
 
-import { diff_match_patch } from 'diff-match-patch';
+export type TokenMap = [string, number][];
 
 export type PlagiarismDetails = {
     contentA: string;
     contentB: string;
+    tokensA: string[];
+    tokensB: string[];
+    mapA: TokenMap;
+    mapB: TokenMap;
 }
 
 export type PlagiarismResult = {
@@ -31,3 +35,5 @@ export interface AnalysisResult {
     detailedList: PlagiarismResult[];
     matrix: SimilarityMatrix;
 }
+
+    

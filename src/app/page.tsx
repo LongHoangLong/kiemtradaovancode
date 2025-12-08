@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { AnalysisResult, PlagiarismResult } from "@/types/plagiarism";
+import { AnalysisResult, PlagiarismResult, TokenMap } from "@/types/plagiarism";
 import { AssignmentUpload } from "@/components/assignment-upload";
 import { HistoryList } from "@/components/history-list";
 
@@ -138,7 +138,6 @@ export default function Home() {
           const cleanedCodeA = cleanCode(fileA.content);
           const cleanedCodeB = cleanCode(fileB.content);
 
-          // Token-based for similarity score
           const tokensA = tokenize(cleanedCodeA);
           const tokensB = tokenize(cleanedCodeB);
           
@@ -168,6 +167,10 @@ export default function Home() {
             details: {
                 contentA: fileA.content,
                 contentB: fileB.content,
+                tokensA,
+                tokensB,
+                mapA: Array.from(mapA.entries()),
+                mapB: Array.from(mapB.entries()),
             }
           });
           
@@ -266,3 +269,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

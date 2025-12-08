@@ -8,6 +8,14 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { CodeHighlighter } from "./code-highlighter";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { AlgorithmExplanation } from "./algorithm-explanation";
+
 
 interface DetailedComparisonProps {
     info: DetailedComparisonInfo;
@@ -50,6 +58,15 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                     </AlertDescription>
                 </Alert>
             )}
+
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger className="text-lg font-semibold">{t.algorithmExplanationTitle}</AccordionTrigger>
+                <AccordionContent>
+                  <AlgorithmExplanation details={info.details} />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
             
              <Card>
                 <CardHeader>
@@ -67,3 +84,5 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
         </div>
     );
 }
+
+    
