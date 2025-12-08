@@ -8,12 +8,7 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { CodeHighlighter } from "./code-highlighter";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { AlgorithmExplanation } from "./algorithm-explanation";
 
 
@@ -58,31 +53,31 @@ export function DetailedComparison({ info, onBack }: DetailedComparisonProps) {
                     </AlertDescription>
                 </Alert>
             )}
-
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="text-lg font-semibold">{t.algorithmExplanationTitle}</AccordionTrigger>
-                <AccordionContent>
-                  <AlgorithmExplanation details={info.details} />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
             
-             <Card>
-                <CardHeader>
-                    <CardTitle>{t.fullSourceCode}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <CodeHighlighter
-                        contentA={info.details.contentA}
-                        contentB={info.details.contentB}
-                        fileA={info.fileA}
-                        fileB={info.fileB}
-                    />
-                </CardContent>
-            </Card>
+            <Tabs defaultValue="code" className="w-full">
+                <TabsList>
+                    <TabsTrigger value="code">{t.fullSourceCode}</TabsTrigger>
+                    <TabsTrigger value="algorithm">{t.algorithmExplanationTitle}</TabsTrigger>
+                </TabsList>
+                <TabsContent value="code" className="mt-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{t.fullSourceCode}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <CodeHighlighter
+                                contentA={info.details.contentA}
+                                contentB={info.details.contentB}
+                                fileA={info.fileA}
+                                fileB={info.fileB}
+                            />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="algorithm" className="mt-4">
+                     <AlgorithmExplanation details={info.details} />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
-
-    
