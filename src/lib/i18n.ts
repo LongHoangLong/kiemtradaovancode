@@ -83,9 +83,14 @@ export const translations = {
     totalTokensFileA: "Total Tokens File A",
     totalTokensFileB: "Total Tokens File B",
     calculation: "Calculation",
+    textExplanation: "Text Explanation",
+    algorithmSimulation: "Algorithm Simulation",
+    simulationIntro: "See the algorithm in action",
+    simulationIntroDesc: "Click the button below to see a step-by-step visualization of how the system analyzes and compares the two source code files.",
+    startSimulation: "Start Simulation",
   },
   vi: {
-    appName: "Kiểm tra đạo văn Code",
+    appName: "Kiểm tra đạo văn trong lập trình",
     tagline: "Tải lên bài tập và nhận báo cáo đạo văn chi tiết.",
     uploadTitle: "Tải lên bài tập",
     uploadSubtitle: "Kéo và thả tệp .zip hoặc .rar hoặc nhấp để chọn",
@@ -167,7 +172,10 @@ export const translations = {
     totalTokensFileA: "Tổng số Token Tệp A",
     totalTokensFileB: "Tổng số Token Tệp B",
     calculation: "Phép tính",
+    textExplanation: "Diễn giải (Văn bản)",
+    algorithmSimulation: "Mô phỏng Thuật toán",
+    simulationIntro: "Xem thuật toán hoạt động",
+    simulationIntroDesc: "Nhấn nút bên dưới để xem từng bước trực quan về cách hệ thống phân tích và so sánh hai tệp mã nguồn.",
+    startSimulation: "Bắt đầu mô phỏng",
   },
 };
-
-    

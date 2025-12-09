@@ -4,7 +4,7 @@ import {LanguageProvider} from '@/contexts/language-context';
 import {Toaster} from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'CodePlagiarismCheck',
+  title: 'Kiểm tra đạo văn trong lập trình',
   description: 'Check for plagiarism in code submissions.',
 };
 
